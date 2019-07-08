@@ -1,30 +1,26 @@
 {
-  "name": "pandjs",
-  "version": "1.0.0",
-  "description": "Pandas, for javascipt",
+  "name": "pandasjs",
+  "version": "0.0.1",
+  "description": "Pandas for javascipt",
   "main": "src/index.js",
   "scripts": {
     "start": "webpack-dev-server --open --hot --mode development --port 3000",
-    "build": "webpack --mode production"
+    "build": "webpack --mode production",
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "immutable": "^4.0.0-rc.12",
-    "react": "^16.8.6",
-    "react-dom": "^16.8.6",
-    "react-router-dom": "^5.0.1"
+    "immutable": "^4.0.0-rc.12"
   },
   "devDependencies": {
     "@babel/core": "^7.4.4",
     "@babel/preset-env": "^7.4.4",
     "@babel/preset-react": "^7.0.0",
     "babel-loader": "^8.0.5",
-    "babel-plugin-react-html-attrs": "^2.1.0",
-    "css-loader": "^3.0.0",
-    "style-loader": "^0.23.1",
-    "url-loader": "^2.0.0",
+    "babel-jest": "^24.8.0",
+    "jest": "^24.8.0",
     "webpack": "^4.30.0",
     "webpack-cli": "^3.3.1",
     "webpack-dev-server": "^3.3.1"
