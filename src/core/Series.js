@@ -1,6 +1,6 @@
 import Immutable from 'immutable'
-
 import { Index } from './Indices'
+import * as exceptions from './Exceptions'
 
 export class Series{
     constructor(data, options){
@@ -9,7 +9,7 @@ export class Series{
             this._name   = data.name
             this._index  = data.index
         }
-        if(Immutable.isList(data)){
+        else if(Immutable.isList(data)){
             this._values = data
         }
         else if(Immutable.isMap(data)){
@@ -19,16 +19,19 @@ export class Series{
         else if(Array.isArray(data)){
             this._values = Immutable.List(data)
         }
+        else if(data === undefined){
+            this._values = Immutable.List()
+        }
+        else{ 
+            throw new TypeError('Could not parse the data')
+        }
         if(options && options.name){
             this._name = options.name
-        } 
-        else {
-            this._name = undefined
         }
         if(options && options.index){
             this._index = new Index(options.index)
             if(this._index.length != this._values.size){
-                throw Error('Index and data are of different length')
+                throw new exceptions.ValueError('Index and data are of different length')
             }
         }
         else{
@@ -41,39 +44,46 @@ export class Series{
     get index(){
         return this._index
     }
+    set index(indices){
+        try{
+            indices = new Index(indices)
+        }
+        catch(error){
+            throw new Error('Could not convert indices to index')
+        }
+        if(indices.length != this.length){
+            throw new Error('Length mismatch error')
+        }
+        this._index = indices
+    }
     get name(){
         return this._name
     }
     get length(){
         return this._values.size
     }
-    loc(label){
-        return this.values.get(this.index.loc(label))
+    loc(...labels){
+        if(labels.length === 1){
+            return this.values.get(this.index.loc(labels[0]))
+        }
+        return Immutable.List(labels.map(label => {
+            return this.values.get(this.index.loc(label))
+        }))
     }
     iloc(index){
-        return this.values.get(index)
-    }
-    slice(begin, end = undefined){
-        if(begin == undefined){
-            begin = 0
-        }
-        if(begin < 0){
-            begin = this.length + begin
-        }
-        if(end == undefined || end != end){
-            end = this.length
-        }
-        if(end < 0 ){
-            end = this.length + end
-        }
-        if(begin > this.length || end > this.length){
+        if(index > this.length || (this.length + index) < 0){
             throw new Error('Out of bounds error')
         }
-        return new Series(this.values.map((value, i) => {
-            return i >= begin && i < end
-        }), {name:this.name, index:this.index.map((value, i) => {
-            return i >= begin && i < end
-        })})
+        return this.values.get(index)
+    }
+    slice(begin, end){
+        if(begin > this.length || (this.length + begin) < 0){
+            throw new Error('Out of bounds error')
+        }
+        if(end && (end > this.length || (this.length + end) < 0)){
+            throw new Error('Out of bounds error')
+        }
+        return new Series(this.values.slice(begin, end), {name:this.name, index:this.index.slice(begin, end)})
     }
     sum(){
         return this.values.reduce((prev, curr) => {
@@ -82,17 +92,22 @@ export class Series{
     }
     mean(){
         return this.sum() / (this.map((value) => {
-            return !Math.isNaN(value)
+            return !isNaN(value)
         }).sum())
     }
-    cum(func){
+    cum(reducer, initializer){
         let values = []
         for(let i = 0, len = this.length; i < len; i++){
             if(i == 0){
-                values.push(this.values.get(i))
+                if(initializer){
+                    values.push(initializer(this.iloc(0)))
+                }
+                else {
+                    values.push(Number(this.iloc(0)))
+                }
             }
             else{
-                values.push(func(values[i-1], this.values.get(i)))
+                values.push(reducer(values[i-1], this.values.get(i)))
             }
         }
         return new Series(values, {index:this.index, name:this.name})
@@ -502,7 +517,7 @@ export class Series{
         return new Series(this.values.reverse(), {name:this.name, index:this.index.reverse()})
     }
     map(func, options){
-        return new Index(this.values.map(func), {name:this.name, index:this.index})
+        return new Series(this.values.map(func), {name:this.name, index:this.index})
     }
     filter(func, options){
         const values = this.values.filter(func)
@@ -538,23 +553,49 @@ export class Series{
         }
         throw new Error('Invalid mask type')
     }
-    isNaN(nullable=true){
+    isNaN(){
         return this.map((value) => {
-            if(nullable){
-                return this.isNaN(Number(value))
-            }
-            return this.isNaN(Number(value)) || value != value // NaN != NaN > True
+            return isNaN(value)
         })
     }
-    dropNaN(nullable=true){
-        return this.mask(this.isNaN(nullable))
+    isNA(){
+        return this.map((value) => {
+            return value === undefined || value !== value
+        })
+    }
+    dropna(){
+        return this.mask(this.isNA().not())
+    }
+    fillna(options){
+        if(options && options.method){
+            if(options.method == "ffill"){
+                return this.cum((prev, curr) => {
+                    if(curr === undefined || curr !== curr){
+                        return prev
+                    }
+                    return curr
+                }, (value) => value === undefined ? NaN : value)
+            }
+            else if(options.method == "bfill"){
+                return this.reverse().fillna({method:"ffill"}).reverse()
+            }
+        }
+        else if(options && options.value){
+            return this.cum((prev, curr) => {
+                if(curr === undefined || curr !== curr){
+                    return options.value
+                }
+                return curr
+            }, (value) => (value === undefined || value !== value) ? options.value : value)
+        }
+        throw new Error('You must pass a method or a fill value')
     }
     asof(label, options){
         const loc = this.index.asof(label, options)
         return this.values.get(this.index.loc(loc))
     }
     all(strict){
-        for(let i = 0; i < this.length; i++){
+        for(let i = 0, len = this.length; i < len; i++){
             if(strict && this.iloc(i) !== true){
                 return false
             }
@@ -565,7 +606,7 @@ export class Series{
         return true
     }
     any(strict){
-        for(let i = 0; i < this.length; i++){
+        for(let i = 0, len = this.length; i < len; i++){
             if(strict && this.iloc(i) === true){
                 return true
             }

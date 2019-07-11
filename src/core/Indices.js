@@ -1,20 +1,27 @@
 import Immutable from 'immutable'
+import * as exceptions from './Exceptions'
 
 class Index{
-    constructor(indices, options){
-        if(indices instanceof Index){
-            this._indices = indices.indices
-            this._name    = indices.name
+    constructor(values, options){
+        if(values === undefined){
+            this._values = Immutable.List()
+        }
+        else if(values instanceof Index){
+            this._values  = values.values
+            this._name    = values.name
             return
         }
-        else if(Immutable.List.isList(indices)){
-            this._indices = indices
+        else if(Immutable.List.isList(values)){
+            this._values = values
         }
-        else if(Array.isArray(indices)){
-            this._indices = Immutable.List(indices)
+        else if(Array.isArray(values)){
+            this._values = Immutable.List(values)
+        }
+        else if(values === undefined){
+            this._values = Immutable.List()
         }
         else{
-            throw new Error("Unable to parse indices")
+            throw new Error("Unable to parse values")
         }
 
         if(options && options.name){
@@ -24,14 +31,14 @@ class Index{
             this._name = undefined
         }
     }
-    get indices(){
-        return this._indices
+    get values(){
+        return this._values
     }
     get name(){
         return this._name
     }
     get length(){
-        return this._indices.size
+        return this.values.size
     }
     get empty(){
         return this.length == 0
@@ -40,126 +47,114 @@ class Index{
         return new Index(this)
     }
     iloc(index){
-        if(index < 0){
-            index = this.length + index
+        if(index >= this.length || (this.length + index) < 0){
+            throw new Error('Out of bounds error')
         }
-        if(index >= this.length){
-            throw new Error("Out of range error: index " + i + " is out of bounds")
-        }
-        return this._indices.get(index)
+        return this.values.get(index)
     }
     loc(label){
-        return this._indices.indexOf(label)
+        if(!this.has(label)){
+            throw new Error('The index does not have ' + label)
+        }
+        return this.values.indexOf(label)
     }
     slice(begin, end){
-        if(bounds.begin){
-            if(bounds.begin < 0){
-                bounds.begin = this.length + bounds.begin
-            }
+        if(begin > this.length || (this.length + begin) < 0){
+            throw new Error('Out of bounds error')
         }
-        else{
-            bounds.begin = 0
+        if(end && (end > this.length || (this.length + end) < 0)){
+            throw new Error('Out of bounds error')
         }
-        if(bounds.end){
-            if(bounds.end < 0){
-                bounds.end = this.length + bounds.end
-            }
-        }
-        else{
-            bounds.end = this.length
-        }
-        return this.filter((value, i) => {
-            return i >= bounds.begin && i < bounds.end
-        })
+        return new Index(this.values.slice(begin, end), {name:this.name})
     }
     has(label){
-        return this._indices.has(label)
+        return this.values.indexOf(label) !== -1
     }
     push(label, options){
         if(options && options.inplace){
-            this._indices = this._indices.push(label)
+            this.values = this.values.push(label)
             return
         }
-        return new Index(this._indices.push(label), {name:this._name})
+        return new Index(this.values.push(label), {name:this._name})
     }
     pop(options){
         if(options && options.inplace){
-            this._indices = this._indices.pop()
+            this.values = this.values.pop()
             return
         }
-        return new Index(this._indices.pop(), {name:this._name})
+        return new Index(this.values.pop(), {name:this._name})
     }
     rename(name, options){
         if(options && options.inplace){
             this._name = name
             return
         }
-        return new Index(this._indices, {name:name})
+        return new Index(this.values, {name:name})
     }
     sort(func, options){
         if(options && options.inplace){
-            this._indices = this._indices.sort(func)
+            this.values = this.values.sort(func)
             return
         }
-        return new Index(this._indices.sort(func), {name:name})
+        return new Index(this.values.sort(func), {name:name})
     }
     reverse(options){
         if(options && options.inplace){
-            this._indices = this._indices.reverse()
+            this.values = this.values.reverse()
             return this
         }
-        return new Index(this._indices.reverse(), {name:name})
+        return new Index(this.values.reverse(), {name:name})
     }
     map(func, options){
         if(options && options.inplace){
-            this._indices = this._indices.map(func)
+            this.values = this.values.map(func)
             return
         }
-        return new Index(this._indices.map(func), {name:this._name})
+        return new Index(this.values.map(func), {name:this._name})
     }
     filter(func, options){
         if(options && options.inplace){
-            this._indices = this._indices.filter(func)
+            this.values = this.values.filter(func)
             return
         }
-        return new Index(this._indices.filter(func), {name:this._name})
+        return new Index(this.values.filter(func), {name:this._name})
     }
     max(func){
         if(this.empty){
             throw new Error("Could not compute max on empty index")
         }
-        return this._indices.max(func)
+        return this.values.max(func)
     }
     min(func){
         if(this.empty){
             throw new Error("Could not compute min on empty index")
         }
-        return this._indices.min(func)
+        return this.values.min(func)
     }
     idxmin(){
-        return this._indices.indexOf(this.min())
+        return this.values.indexOf(this.min())
     }
     idxmax(){
-        return this._indices.indexOf(this.max())
+        return this.values.indexOf(this.max())
     }
     concat(other){
-        return new Index(this._indices.concat(other), {name:name})
+        return new Index(this.values.concat(other), {name:name})
     }
     union(other){
         if(this.duplicates().any()){
-            throw new Error("Set operations like .union are not permitted on indices with duplicates")
+            throw new Error("Set operations like .union are not permitted on values with duplicates")
         }
         if(other instanceof Index){
-            const indices = this._indices.toSet().union(other.indices.toSet()).toList()
-            return new Index(indices, {name:this._name})
+            const values = this.values.toSet().union(other.values.toSet()).toList()
+            return new Index(values, {name:this._name})
         }
         else if(Immutable.List.isList(other)){
-            const indices = this._indices.toSet().union(other.toSet()).toList()
-            return new Index(indices, {name:this._name})
+            const values = this.values.toSet().union(other.toSet()).toList()
+            return new Index(values, {name:this._name})
         }
         else if(Array.isArray(other)){
-            const indices = this._indices.toSet().union(Immutable.Set(other)).toList()
-            return new Index(indices, {name:this._name})
+            const values = this.values.toSet().union(Immutable.Set(other)).toList()
+            return new Index(values, {name:this._name})
         }
         else{
             throw new Error("TypeError: Unable to perform union on " + other)
@@ -167,19 +162,19 @@ class Index{
     }
     intersection(other){
         if(this.duplicates().any()){
-            throw new Error("Set operations like .intersection are not permitted on indices with duplicates")
+            throw new Error("Set operations like .intersection are not permitted on values with duplicates")
         }
         if(other instanceof Index){
-            const indices = this._indices.toSet().intersect(other.indices.toSet()).toList()
-            return new Index(indices, {name:this._name})
+            const values = this.values.toSet().intersect(other.values.toSet()).toList()
+            return new Index(values, {name:this._name})
         }
         else if(Immutable.List.isList(other)){
-            const indices = this._indices.toSet().intersect(other.toSet()).toList()
-            return new Index(indices, {name:this._name})
+            const values = this.values.toSet().intersect(other.toSet()).toList()
+            return new Index(values, {name:this._name})
         }
         else if(Array.isArray(other)){
-            const indices = this._indices.toSet().intersect(Immutable.Set(other)).toList()
-            return new Index(indices, {name:this._name})
+            const values = this.values.toSet().intersect(Immutable.Set(other)).toList()
+            return new Index(values, {name:this._name})
         }
         else{
             throw new Error("TypeError: Unable to perform intersection on " + other)
@@ -187,19 +182,19 @@ class Index{
     }
     difference(other){
         if(this.duplicates().any()){
-            throw new Error("Set operations like .difference are not permitted on indices with duplicates")
+            throw new Error("Set operations like .difference are not permitted on values with duplicates")
         }
         if(other instanceof Index){
-            const indices = this._indices.toSet().subtract(other.indices.toSet()).toList()
-            return new Index(indices, {name:this._name})
+            const values = this.values.toSet().subtract(other.values.toSet()).toList()
+            return new Index(values, {name:this._name})
         }
         else if(Immutable.List.isList(other)){
-            const indices = this._indices.toSet().subtract(other.toSet()).toList()
-            return new Index(indices, {name:this._name})
+            const values = this.values.toSet().subtract(other.toSet()).toList()
+            return new Index(values, {name:this._name})
         }
         else if(Array.isArray(other)){
-            const indices = this._indices.toSet().subtract(Immutable.Set(other)).toList()
-            return new Index(indices, {name:this._name})
+            const values = this.values.toSet().subtract(Immutable.Set(other)).toList()
+            return new Index(values, {name:this._name})
         }
         else{
             throw new Error("TypeError: Unable to perform intersection on " + other)
@@ -218,37 +213,37 @@ class Index{
     }
     toList(native){
         if(native){
-            return this._indices.toJS()
+            return this.values.toJS()
         }
-        return this._indices
+        return this.values
     }
     mask(other){
         if(other instanceof Index){
             if(other.length != this.length){
                 throw new Error("Masking index must be of length " + this.length + ", " + other.length + " given")
             }
-            const indices = this._indices.filter((value, i) => {
+            const values = this.values.filter((value, i) => {
                 return other.iloc(i)
             })
-            return new Index(indices, {name:this._name})
+            return new Index(values, {name:this._name})
         }
         else if(Immutable.List.isList(other)){
             if(other.size != this.length){
                 throw new Error("Masking list must be of length " + this.length + ", " + other.size + " given")
             }
-            const indices = this._indices.filter((value, i) => {
+            const values = this.values.filter((value, i) => {
                 return other.get(i)
             })
-            return new Index(indices, {name:this._name})
+            return new Index(values, {name:this._name})
         }
         else if(Array.isArray(other)){
             if(other.length != this.length){
                 throw new Error("Masking list must be of length " + this.length + ", " + other.length + " given")
             }
-            const indices = this._indices.filter((value, i) => {
+            const values = this.values.filter((value, i) => {
                 return other[i]
             })
-            return new Index(indices, {name:this._name})
+            return new Index(values, {name:this._name})
         }
         else{
             throw new Error("Mask must be an Array/Immutable.List/pd.Index")
@@ -277,10 +272,10 @@ class Index{
     }
     duplicates(keep){
         if(keep == "first"){
-            const indices = this._indices.map((value, i) => {
-                return this._indices.indexOf(value) != i
+            const values = this.values.map((value, i) => {
+                return this.values.indexOf(value) != i
             })
-            return new Index(indices, {name:this._name})
+            return new Index(values, {name:this._name})
         }
         else if(keep == "last"){
             return this.reverse().duplicates("first").reverse()
@@ -288,10 +283,10 @@ class Index{
         else{
             const reversed = this.reverse(), length = this.length
 
-            const indices = this._indices.map((value, i) => {
-                return this._indices.indexOf(value) != i || reversed.indices.indexOf(value) != (length - i - 1)
+            const values = this.values.map((value, i) => {
+                return this.values.indexOf(value) != i || reversed.values.indexOf(value) != (length - i - 1)
             })
-            return new Index(indices, {name:this._name})
+            return new Index(values, {name:this._name})
         }
     }
     deduplicate(keep){
@@ -335,31 +330,31 @@ class Index{
     }
     astype(dtype){
         if(dtype == "string"){
-            const indices = this._indices.map(value => {
+            const values = this.values.map(value => {
                 return String(value)
             })
-            return new Index(indices, {name:this.name})
+            return new Index(values, {name:this.name})
         } 
         else if(dtype == "number"){
-            const indices = this._indices.map(value => {
+            const values = this.values.map(value => {
                 return Number(value)
             })
-            return new Index(indices, {name:this.name})
+            return new Index(values, {name:this.name})
         }
         else if(dtype == "boolean"){
-            const indices = this._indices.map(value => {
+            const values = this.values.map(value => {
                 return Boolean(value)
             })
-            return new Index(indices, {name:this.name})
+            return new Index(values, {name:this.name})
         }
         else if(dtype ==  "date"){
-            const indices = this._indices.map(value => {
+            const values = this.values.map(value => {
                 return new Date(value)
             })
-            return new Index(indices, {name:this.name})
+            return new Index(values, {name:this.name})
         }
         else if(dtype == "object"){
-            return new Index(this._indices, {name:this.name})
+            return new Index(this.values, {name:this.name})
         }
         else{
             throw new Error("Invalid dtype, " + dtype + " given")
