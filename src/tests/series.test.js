@@ -159,6 +159,35 @@ describe('masking', () => {
     })
 })
 
+describe('descriptive statistics', () => {
+    test('sum, count and mean', () => {
+        let s1 = new Series([0,1,2,3,4])
+        expect(s1.sum()).toBe(10)
+        expect(s1.count()).toBe(5)
+        expect(s1.mean()).toBe(2)
+
+        let s2 = new Series([0,1,2,3,NaN])
+        expect(s2.sum()).toBe(6)
+        expect(s2.sum(false)).toBe(NaN)
+        expect(s2.count(false)).toBe(s2.length)
+        expect(s2.mean(false)).toBe(NaN)
+
+        let s3 = new Series(["A", 1, 2.5, true, false, NaN, undefined, Infinity, -Infinity, null])
+        expect(s3.sum()).toBe(4.5)
+        expect(s3.count()).toBe(5)
+        expect(s3.mean()).toBe(0.90)
+        expect(s3.mean(false)).toBe(NaN)
+    })
+
+    test('min and max', () => {
+        let s3 = new Series(["A", 1, 2.5, true, false, NaN, undefined, Infinity, -Infinity, null])
+        expect(s3.min()).toBe(0)
+        expect(s3.min(false)).toBe(-Infinity)
+        expect(s3.max()).toBe(2.5)
+        expect(s3.max(false)).toBe(+Infinity)
+    })
+})
+
 
 
 

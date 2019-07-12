@@ -1,6 +1,7 @@
 import Immutable from 'immutable'
 import { Index } from './Indices'
 import * as exceptions from './Exceptions'
+import { isnan } from './utils';
 
 export class Series{
     constructor(data, options){
@@ -21,6 +22,11 @@ export class Series{
         }
         else if(data === undefined){
             this._values = Immutable.List()
+        }
+        else if(typeof data == "object"){
+            if(data.data){
+                return new Series(data.data, {name:data.name, index:data.index})
+            }
         }
         else{ 
             throw new TypeError('Could not parse the data')
@@ -71,7 +77,7 @@ export class Series{
         }))
     }
     iloc(index){
-        if(index > this.length || (this.length + index) < 0){
+        if(index >= this.length || (this.length + index) < 0){
             throw new Error('Out of bounds error')
         }
         return this.values.get(index)
@@ -85,15 +91,24 @@ export class Series{
         }
         return new Series(this.values.slice(begin, end), {name:this.name, index:this.index.slice(begin, end)})
     }
-    sum(){
+    sum(skipnan){
         return this.values.reduce((prev, curr) => {
-            return prev + curr
+            if(skipnan === false){
+                return prev + curr
+            }
+            return isnan(curr) ? prev : prev + curr
         }, 0)
     }
-    mean(){
-        return this.sum() / (this.map((value) => {
-            return !isNaN(value)
-        }).sum())
+    count(skipnan = true){
+        return this.values.reduce((prev, curr) => {
+            if(skipnan === false){
+                return prev + 1
+            }
+            return isnan(curr) ? prev : prev + 1
+        }, 0)
+    }
+    mean(skipnan = true){
+        return this.sum(skipnan) / this.count(skipnan)
     }
     cum(reducer, initializer){
         let values = []
@@ -112,7 +127,7 @@ export class Series{
         }
         return new Series(values, {index:this.index, name:this.name})
     }
-    cumsum(){
+    cumsum(skipna){
         return this.cum((prev, curr) => {
             return prev + curr
         })
@@ -327,6 +342,40 @@ export class Series{
         }
         return this.map((value) => value % other)
     }
+    pow(other, options){
+        if(other instanceof Series){
+            if(options && options["ignore index"]){
+                if(other.length != this.length){
+                    throw new Error('Mask series must be of equal length')
+                }
+                return this.map((value, i) => {
+                    return Math.pow(other.iloc(i), value)
+                })
+            } 
+            else {
+                return this.map((value, i) => {
+                    return Math.pow(value, other.loc(this.index.iloc(i)))
+                })
+            }
+        }
+        else if(Immutable.isList(other)){
+            if(other.size != this.length){
+                throw new Error('Mask series must be of equal length')
+            }
+            return this.map((value, i) => {
+                return Math.pow(other.get(i), value)
+            })
+        }
+        else if(Array.isArray(other)){
+            if(other.length != this.length){
+                throw new Error('Mask series must be of equal length')
+            }
+            return this.map((value, i) => {
+                return Math.pow(other[i], value)
+            })
+        }
+        return this.map((value) => Math.pow(value, other))
+    }
     equals(other){
         if(other instanceof Series){
             if(options && options["ignore index"]){
@@ -500,23 +549,41 @@ export class Series{
         }
         return this.map((value) => value <= other)
     }
-    max(){
+    max(skipnan = true){
         return this.values.reduce((prev, curr) => {
-            return prev > curr ? prev : curr
-        })
+            if(skipnan === false){
+                return prev > curr ? prev : curr
+            }
+            return isnan(curr) ? prev : (prev > curr ? prev : curr)
+        }, 0)
     }
-    min(){
+    min(skipnan = true){
         return this.values.reduce((prev, curr) => {
-            return prev > curr ? curr : prev
-        })
+            if(skipnan === false){
+                return prev < curr ? prev : curr
+            }
+            return isnan(curr) ? prev : (prev < Number(curr) ? prev : Number(curr))
+        }, 0)
     }
     rename(name, options){
+        if(options && options.inplace){
+            this._name = name
+            return
+        }
         return new Series(this.values, {name:name, index:this.index})
     }
     reverse(options){
+        if(options && options.inplace){
+            this._values = this.values.reverse()
+            return
+        }
         return new Series(this.values.reverse(), {name:this.name, index:this.index.reverse()})
     }
     map(func, options){
+        if(options && options.inplace){
+            this._values = this.values.map(func)
+            return
+        }
         return new Series(this.values.map(func), {name:this.name, index:this.index})
     }
     filter(func, options){
