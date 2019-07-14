@@ -2,6 +2,7 @@ import Immutable       from 'immutable'
 import { Series }      from '../core/Series'
 import { Index }       from '../core/Indices'
 import * as exceptions from '../core/Exceptions'
+import * as utils      from '../core/utils'
 
 let s1 = new Series([0,1,2,3,4,5,6,7], {name:'integers', index:["A","B","C","D","E","F","G","H"]})
 
@@ -53,7 +54,7 @@ describe('Indexing by value', () => {
     })
     test('requesting several labels at once', () => {
         let s = new Series([0,1,2,3,4,5,6], {index:["A",9,true,false,null,undefined,NaN]})
-        expect(s.loc("A",9,true,false).toArray()).toEqual([0,1,2,3])
+        expect(s.loc(["A",9,true,false])).toEqual([0,1,2,3])
     })
     test('requesting a non-existent key', () => {
         let s = new Series([0,1,2,3])
@@ -115,23 +116,23 @@ describe('Typing', () => {
 describe('missing values', () => {
     test('finding missing values', () => {
         let s = new Series(["A", 0, 1, true, false, NaN, undefined, null])
-        expect(s.isNA().sum()).toBe(2)
-        expect(s.isNaN().sum()).toBe(3)
+        expect(s.isNA().sum()).toBe(3)
+        expect(s.isNaN().sum()).toBe(4)
     })
     test('dropping missing values', () => {
         let s = new Series(["A", 0, 1, true, false, NaN, undefined, null])
-        expect(s.dropna().length).toBe(6)
+        expect(s.dropna().length).toBe(5)
     })
     test('filling missing values', () => {
         let s = new Series(["A", 0, 1, true, false, NaN, undefined, null])
         expect(s.fillna({method:"ffill"}).values.toArray()).toEqual([
-            "A", 0, 1, true, false, false, false, null
+            "A", 0, 1, true, false, false, false, false
         ])
         expect(s.fillna({method:"bfill"}).values.toArray()).toEqual([
-            "A", 0, 1, true, false, null, null, null
+            "A", 0, 1, true, false, NaN,NaN,NaN
         ])
         expect(s.fillna({value:"X"}).values.toArray()).toEqual([
-            "A", 0, 1, true, false, "X", "X", null
+            "A", 0, 1, true, false, "X", "X", "X"
         ])
     })
 })
@@ -166,25 +167,138 @@ describe('descriptive statistics', () => {
         expect(s1.count()).toBe(5)
         expect(s1.mean()).toBe(2)
 
-        let s2 = new Series([0,1,2,3,NaN])
+        let s2 = new Series([0,1,2,3,NaN,"A"])
         expect(s2.sum()).toBe(6)
         expect(s2.sum(false)).toBe(NaN)
-        expect(s2.count(false)).toBe(s2.length)
+        expect(s2.count()).toBe(4)
+        expect(s2.count(false)).toBe(5)
         expect(s2.mean(false)).toBe(NaN)
 
         let s3 = new Series(["A", 1, 2.5, true, false, NaN, undefined, Infinity, -Infinity, null])
         expect(s3.sum()).toBe(4.5)
-        expect(s3.count()).toBe(5)
-        expect(s3.mean()).toBe(0.90)
+        expect(s3.count()).toBe(4)
+        expect(s3.mean()).toBe(1.125)
         expect(s3.mean(false)).toBe(NaN)
     })
 
     test('min and max', () => {
         let s3 = new Series(["A", 1, 2.5, true, false, NaN, undefined, Infinity, -Infinity, null])
         expect(s3.min()).toBe(0)
-        expect(s3.min(false)).toBe(-Infinity)
+        expect(s3.min(false)).toBe(NaN)
         expect(s3.max()).toBe(2.5)
-        expect(s3.max(false)).toBe(+Infinity)
+        expect(s3.max(false)).toBe(NaN)
+    })
+})
+
+describe('cumulative operations', () => {
+    test('cumulative sum', () => {
+        let s1 = new Series([1,2,3,4,5])
+        expect(s1.cumsum().values).toEqual(Immutable.List([1,3,6,10,15]))
+
+        let s2 = new Series([NaN,1,2,3,NaN,5])
+        expect(s2.cumsum().values).toEqual(Immutable.List([NaN,1,3,6,6,11]))
+        expect(s2.cumsum(false).values).toEqual(Immutable.List([NaN, NaN, NaN, NaN, NaN, NaN]))
+
+        let s3 = new Series([1,2,3,NaN,4])
+        expect(s3.cumsum(false).values).toEqual(Immutable.List([1, 3, 6, NaN, NaN]))
+    })
+    test('cumulative product', () => {
+        let s1 = new Series([1,2,3,4,5])
+        expect(s1.cumprod().values).toEqual(Immutable.List([1,2,6,24,120]))
+
+        let s2 = new Series([NaN,1,2,3,NaN,5])
+        expect(s2.cumprod().values).toEqual(Immutable.List([NaN,1,2,6,6,30]))
+        expect(s2.cumprod(false).values).toEqual(Immutable.List([NaN, NaN, NaN, NaN, NaN, NaN]))
+
+        let s3 = new Series([1,2,3,NaN,4])
+        expect(s3.cumprod(false).values).toEqual(Immutable.List([1, 3, 6, NaN, NaN]))
+    })
+    test('cumulative minimum', () => {
+        let s1 = new Series([0,-1,2,-3,5])
+        expect(s1.cummin().values).toEqual(Immutable.List([0,-1,-1,-3,-3]))
+
+        let s2 = new Series([NaN,0,-1,2,-3,5])
+        expect(s2.cummin().values).toEqual(Immutable.List([NaN,0,-1,-1,-3,-3]))
+        expect(s2.cummin(false).values).toEqual(Immutable.List([NaN, NaN, NaN, NaN, NaN, NaN]))
+
+        let s3 = new Series([0,-1,2,-3,NaN,5])
+        expect(s3.cummin(false).values).toEqual(Immutable.List([0,-1,-1,-3,NaN,NaN]))
+    })
+    test('cumulative maximum', () => {
+        let s1 = new Series([0,-1,2,-3,5])
+        expect(s1.cummax().values).toEqual(Immutable.List([0,0,2,2,5]))
+
+        let s2 = new Series([NaN,0,-1,2,-3,5])
+        expect(s2.cummax().values).toEqual(Immutable.List([NaN,0,0,2,2,5]))
+        expect(s2.cummax(false).values).toEqual(Immutable.List([NaN, NaN, NaN, NaN, NaN, NaN]))
+
+        let s3 = new Series([0,-1,2,-3,NaN,5])
+        expect(s3.cummax(false).values).toEqual(Immutable.List([0,0,2,2,NaN,NaN]))
+    })
+})
+
+describe("arithmetics", () => {
+    test('addition', () => {
+        let s1 = new Series([NaN, 1, 2, 3, true, false], {index:["A","B","C","D","E","F"]})
+        expect(s1.add(1).values).toEqual(Immutable.List([NaN, 2, 3, 4, 2, 1]))
+        expect(s1.add(NaN).values).toEqual(Immutable.List([NaN, NaN, NaN, NaN, NaN, NaN]))
+
+        let s2 = new Series([1,2,3, NaN], {index:["F","E","B","C"]})
+        expect(s1.add(s2).values).toEqual(Immutable.List([NaN,4,NaN,NaN,3,1]))
+
+        let s3 = [1,1,1,1,1,1]
+        expect(s1.add(s3).values).toEqual(Immutable.List([NaN,2,3,4,2,1]))
+
+        let s4 = Immutable.List(s3)
+        expect(s1.add(s4).values).toEqual(Immutable.List([NaN,2,3,4,2,1]))
+
+        let s5 = s1.map((value, i) => 5-i)
+        expect(s1.add(s5, {"ignore index":true}).values).toEqual(Immutable.List([NaN, 5, 5, 5, 2, 0]))
+    })
+    test('subtractions', () => {
+        let s1 = new Series([NaN, 1, 2, 3, true, false], {index:["A","B","C","D","E","F"]})
+        expect(s1.subtract(1).values).toEqual(Immutable.List([NaN, 0, 1, 2, 0, -1]))
+        expect(s1.subtract(NaN).values).toEqual(Immutable.List([NaN, NaN, NaN, NaN, NaN, NaN]))
+
+        let s2 = new Series([1,2,3, NaN], {index:["F","E","B","C"]})
+        expect(s1.subtract(s2).values).toEqual(Immutable.List([NaN,-2,NaN,NaN,-1,-1]))
+
+        let s3 = [1,1,1,1,1,1]
+        expect(s1.subtract(s3).values).toEqual(Immutable.List([NaN, 0, 1, 2, 0, -1]))
+
+        let s4 = Immutable.List(s3)
+        expect(s1.subtract(s4).values).toEqual(Immutable.List([NaN, 0, 1, 2, 0, -1]))
+
+        let s5 = s1.map((value, i) => 5-i)
+        expect(s1.subtract(s5, {"ignore index":true}).values).toEqual(Immutable.List([NaN, -3, -1, 1, 0, 0]))
+    })
+    test('multiplications', () => {
+        let s1 = new Series([NaN, 1, 2, 3, true, false], {index:["A","B","C","D","E","F"]})
+        expect(s1.multiply(-1).values).toEqual(Immutable.List([NaN, -1,-2,-3,-1,-0]))
+        expect(s1.multiply(NaN).values).toEqual(Immutable.List([NaN, NaN, NaN, NaN, NaN, NaN]))
+
+        let s2 = new Series([1,2,3, NaN], {index:["F","E","B","C"]})
+        expect(s1.multiply(s2).values).toEqual(Immutable.List([NaN,3,NaN,NaN,2,0]))
+
+        let s3 = [1,-1,1,-1,1,-1]
+        expect(s1.multiply(s3).values).toEqual(Immutable.List([NaN, -1,2,-3,1,-0]))
+
+        let s4 = Immutable.List(s3)
+        expect(s1.multiply(s4).values).toEqual(Immutable.List([NaN, -1,2,-3,1,-0]))
+    })
+    test('divisions', () => {
+        let s1 = new Series([NaN, 1, 2, 3, true, false], {index:["A","B","C","D","E","F"]})
+        expect(s1.divide(2).values).toEqual(Immutable.List([NaN,0.5,1,1.5,0.5,0]))
+        expect(s1.divide(NaN).values).toEqual(Immutable.List([NaN, NaN, NaN, NaN, NaN, NaN]))
+
+        let s2 = new Series([1,2,-2, NaN], {index:["F","E","B","C"]})
+        expect(s1.divide(s2).values).toEqual(Immutable.List([NaN,-0.5,NaN,NaN,0.5,0]))
+
+        let s3 = [1,-1,1,-1,1,-1]
+        expect(s1.divide(s3).values).toEqual(Immutable.List([NaN, -1,2,-3,1,-0]))
+
+        let s4 = Immutable.List(s3)
+        expect(s1.divide(s4).values).toEqual(Immutable.List([NaN, -1,2,-3,1,-0]))
     })
 })
 

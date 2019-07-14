@@ -92,7 +92,7 @@ describe('test values for definition', () => {
     test('if value is missing', ()=> {
         expect(utils.isNA('')).toBe(false)
         expect(utils.isNA(new String(''))).toBe(false)
-        expect(utils.isNA('x')).toBe(false)
+        expect(utils.isNA('A')).toBe(false)
         expect(utils.isNA(new String('x'))).toBe(false)
         expect(utils.isNA(1)).toBe(false)
         expect(utils.isNA(0)).toBe(false)

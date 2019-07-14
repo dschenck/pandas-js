@@ -91,3 +91,33 @@ export function isna(value){
 export function isNA(value){
     return isna(value)
 }
+
+/**
+ * Checks whether a value is not an object
+ * 
+ * @param {*} value the tested value
+ * @returns {boolean}
+ */
+export function isprimitive(value){
+    return (
+        isnumber(value) || isstring(value) || isboolean(value) 
+        || value === null
+        || value === undefined
+        || value !== value
+    )
+}
+
+/**
+ * Checks whether a value is mappable
+ * 
+ * @param {*} value the tested value
+ * @returns {boolean}
+ */
+export function ismappable(value){
+    try{
+        return value.map !== undefined && typeof value.map === "function" 
+    }
+    catch{
+        return false
+    }
+}
