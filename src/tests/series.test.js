@@ -1,6 +1,6 @@
 import Immutable       from 'immutable'
 import { Series }      from '../core/Series'
-import { Index }       from '../core/Indices'
+import { Axis }       from '../core/Axes'
 import * as exceptions from '../core/Exceptions'
 import * as utils      from '../core/utils'
 
@@ -11,7 +11,7 @@ describe('Creating a new series', () => {
         let s = new Series()
         expect(s).toBeInstanceOf(Series)
         expect(s.length).toBe(0)
-        expect(s.index).toBeInstanceOf(Index)
+        expect(s.index).toBeInstanceOf(Axis)
         expect(s.index.length).toBe(0)
         expect(s.name).toBe(undefined)
     })
@@ -20,7 +20,7 @@ describe('Creating a new series', () => {
         expect(s).toBeInstanceOf(Series)
         expect(s.length).toBe(3)
         expect(s.name).toBe(undefined)
-        expect(s.index).toBeInstanceOf(Index)
+        expect(s.index).toBeInstanceOf(Axis)
         expect(s.index.values.toArray()).toEqual([0,1,2])
     })
     test('with a name', () => {
@@ -41,7 +41,7 @@ describe('Changing the index in-place', () => {
     })
 })
 
-describe('Indexing by value', () => {
+describe('Axising by value', () => {
     test('requesting a single label', () => {
         let s = new Series([0,1,2,3,4,5,6], {index:["A",9,true,false,null,undefined,NaN]})
         expect(s.loc("A")).toBe(0)
@@ -62,7 +62,7 @@ describe('Indexing by value', () => {
     })
 })
 
-describe('Indexing by position', () => {
+describe('Axising by position', () => {
     test('requesting a single label', () => {
         let s = new Series([0,1,2,3,4,5,6], {index:["A",9,true,false,null,undefined,NaN]})
         expect(s.iloc(0)).toBe(0)
@@ -301,6 +301,159 @@ describe("arithmetics", () => {
         expect(s1.divide(s4).values).toEqual(Immutable.List([NaN, -1,2,-3,1,-0]))
     })
 })
+
+describe("Mapping and filtering", () => {
+    test('Filtering', () => {
+        let s1 = new Series([0,1,2,3,4,5,6,7], {name:'integers', index:["A","B","C","D","E","F","G","H"]})
+        expect(s1.filter(value => value % 2 == 0).values).toEqual(
+            Immutable.List([0,2,4,6])
+        )
+    })
+    test('Mapping', () => {
+        let s1 = new Series([0,1,2,3,4,5,6,7], {name:'integers', index:["A","B","C","D","E","F","G","H"]})
+        expect(s1.map(value => value % 2 == 0).values).toEqual(
+            Immutable.List([true,false,true,false,true,false,true,false])
+        )
+    })
+    test('Every n steps', () => {
+        let s1 = new Series([0,1,2,3,4,5,6,7], {name:'integers', index:["A","B","C","D","E","F","G","H"]})
+        expect(s1.every(2).values).toEqual(
+            Immutable.List([0,2,4,6])
+        )
+        expect(s1.every(2).index.values).toEqual(
+            Immutable.List(["A","C","E","G"])
+        )
+    })
+})
+
+describe('Reversing', () => {
+    let s1 = new Series([0,1,2,3,4,5,6,7], {index:["A","B","C","D","E","F","G","H"]})
+    test('simple reversing', () => {
+        expect(s1.reverse().values).toEqual(
+            Immutable.List([7,6,5,4,3,2,1,0])
+        )
+        expect(s1.reverse().loc("A")).toBe(s1.loc("H"))
+    })
+
+    test('double-reversing', () => {
+        expect(s1.reverse().reverse().values).toEqual(
+            s1.values
+        )
+    })
+})
+
+describe('Updating', () => {
+    test('conditional witho other series', () => {
+        let s1 = new Series([0,1,2,3,4,5,6,7])
+        let s2 = s1.reverse()
+
+        expect(s1.where((value => value % 2 == 0), s2).values).toEqual(
+            Immutable.List([0,6,2,4,4,2,6,0])
+        )
+    })
+    test('conditional with array', () => {
+        let s1 = new Series([0,1,2,3,4,5,6,7])
+        let s2 = [-1,-1,-1,-1,-1,-1,-1,-1]
+
+        expect(s1.where((value => value % 2 == 0), s2).values).toEqual(
+            Immutable.List([0,-1,2,-1,4,-1,6,-1])
+        )
+    })
+    test('conditional with scalar', () => {
+        let s1 = new Series([0,1,2,3,4,5,6,7])
+
+        expect(s1.where((value => value % 2 == 0), NaN).values).toEqual(
+            Immutable.List([0,NaN,2,NaN,4,NaN,6,NaN])
+        )
+    })
+})
+
+describe("difference", () => {
+    let srs = new Series([0,1,2,3,4,5,6,7,8,9,10])
+
+    test('default diff', () => {
+        expect(srs.diff().values).toEqual(
+            Immutable.List([NaN,1,1,1,1,1,1,1,1,1,1])
+        )
+    })
+    test('0 difference', () => {
+        expect(srs.diff(0).values).toEqual(
+            Immutable.List([0,0,0,0,0,0,0,0,0,0,0])
+        )
+    })
+    test('2-step diff', () => {
+        expect(srs.diff(2).values).toEqual(
+            Immutable.List([NaN,NaN,2,2,2,2,2,2,2,2,2])
+        )
+    })
+})
+
+describe("Shifting", () =>{
+    let s1 = new Series([0,1,2,3,4,5,6,7], {index:["A","B","C","D","E","F","G","H"]})
+    test("positive offset", () => {
+        expect(s1.shift(1).values).toEqual(
+            Immutable.List([NaN,0,1,2,3,4,5,6])
+        )
+        expect(s1.shift(1).index.values).toEqual(
+            Immutable.List(["A","B","C","D","E","F","G","H"])
+        )
+    })
+    test("negative offset", () => {
+        expect(s1.shift(-1).values).toEqual(
+            Immutable.List([1,2,3,4,5,6,7,NaN])
+        )
+        expect(s1.shift(-1).index.values).toEqual(
+            Immutable.List(["A","B","C","D","E","F","G","H"])
+        )
+    })
+    test("0 offset", () => {
+        expect(s1.shift(0).values).toEqual(
+            s1.values
+        )
+        expect(s1.shift(0).index.values).toEqual(
+            Immutable.List(["A","B","C","D","E","F","G","H"])
+        )
+    })
+    test("wrong argument should throw error", () => {
+        expect(() => s1.shift('hi')).toThrow(Error)
+    })
+})
+
+describe("Dropping a list of labels", () => {
+    let s1 = new Series([0,1,2,3,4,5,6,7], {index:["A","B","C","D","E","F","G","H"]})
+    test("a single label", () => {
+        expect(s1.drop(["A"]).values).toEqual(
+            Immutable.List([1,2,3,4,5,6,7])
+        )
+    })
+    test("a few label", () => {
+        expect(s1.drop(["A", "B", "F"]).values).toEqual(
+            Immutable.List([2,3,4,6,7])
+        )
+    })
+})
+
+describe("Location of min and max", () => {
+    let s = new Series([null, 0.25, 3/4, true, false, "A", null, undefined, NaN])
+    test("argument of min", () => {
+        expect(s.idxmin()).toBe(4)
+    })
+    test("argument of max", () => {
+        expect(s.idxmax()).toBe(3)
+    })
+})
+
+describe("Is in", () => {
+    let s = new Series([null, 0.25, 3/4, true, false, "A", null, undefined, NaN])
+    test("value is in", () => {
+        expect(s.isin([true,false]).values).toEqual(
+            Immutable.List([false,false,false,true,true,false,false,false,false])
+        )
+    })
+})
+
+
+
 
 
 

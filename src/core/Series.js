@@ -1,6 +1,6 @@
 import Immutable       from 'immutable'
 
-import { Index }       from './Indices'
+import { Axis }       from './Axes'
 import * as exceptions from './Exceptions'
 import * as utils      from './utils'
 
@@ -16,7 +16,7 @@ export class Series{
         }
         else if(Immutable.isMap(data)){
             this._values = Immutable.List(data.values())
-            this._index  = new Index(data.keys())
+            this._index  = new Axis(data.keys())
         }
         else if(Array.isArray(data)){
             this._values = Immutable.List(data)
@@ -36,13 +36,13 @@ export class Series{
             this._name = options.name
         }
         if(options && options.index){
-            this._index = new Index(options.index)
+            this._index = new Axis(options.index)
             if(this._index.length != this._values.size){
                 throw new exceptions.ValueError('Index and data are of different length')
             }
         }
         else{
-            this._index = new Index(Immutable.Range(0, this._values.size).toList())
+            this._index = new Axis(Immutable.Range(0, this._values.size).toList())
         }
     }
 
@@ -56,7 +56,7 @@ export class Series{
 
     set index(indices){
         try{
-            indices = new Index(indices)
+            indices = new Axis(indices)
         }
         catch(error){
             throw new Error('Could not convert indices to index')
@@ -813,7 +813,8 @@ export class Series{
     }
 
     /**
-     * Returns a new series with the value and index order reversed
+     * Returns a new series with the values reversed relative to the index
+     * The index is not reversed
      * e.g. first > last
      * 
      * @param {*} options options.inplace changes the values in-place
@@ -822,10 +823,10 @@ export class Series{
     reverse(options){
         if(options && options.inplace){
             this._values = this._values.reverse()
-            this._index  = this.index.reverse()
+            this._index  = this.index
             return
         }
-        return new Series(this._values.reverse(), {name:this.name, index:this.index.reverse()})
+        return new Series(this._values.reverse(), {name:this.name, index:this.index})
     }
 
     /**
@@ -1019,7 +1020,7 @@ export class Series{
             })
         }
         return this.map((value, i) => {
-            if(i - period >= this.length){
+            if(i - periods >= this.length){
                 return NaN
             }
             return this._values.get(i) - this._values.get(i - periods)
@@ -1034,6 +1035,9 @@ export class Series{
      * @returns {Series}
      */
     shift(offset = 0, fill = NaN){
+        if(utils.isNaN(offset) || !Number.isInteger(offset)){
+            throw new Error('Offset should be an integer')
+        }
         if(offset > 0){
             return this.map((value, i) => {
                 if(i < offset){
@@ -1044,12 +1048,13 @@ export class Series{
         }
         else if(offset < 0){
             return this.map((value, i) => {
-                if(i > (this.length - offset)){
+                if(i >= (this.length + offset)){
                     return fill
                 }
                 return this._values.get(i-offset)
             })
         }
+        return this.copy()
     }
     /**
      * Filter every n-periods
@@ -1065,19 +1070,15 @@ export class Series{
 
     /**
      * Drop rows where label in labels
+     * TODO should be able to pass a single label
      * 
      * @param {Array} labels 
      * @param {} axis 
      * @returns {Series}
      */
     drop(labels){
-        if(utils.isstring(labels)){
-            return this.filter((value, i) => {
-                return this.index.iloc(i) == labels
-            })
-        }
         return this.filter((value, i) => {
-            return labels.indexOf(this.index.iloc(i)) != -1
+            return labels.indexOf(this.index.iloc(i)) == -1
         })
     }
     

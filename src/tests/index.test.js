@@ -1,8 +1,8 @@
 import Immutable             from 'immutable'
-import { Index, RangeIndex } from '../core/Indices'
+import { Axis } from '../core/Axes'
 
 //create a new index
-let idx = new Index(Immutable.Range(0, 100).toList(), {name:"first index"})
+let idx = new Axis(Immutable.Range(0, 100).toList(), {name:"first index"})
 
 test('index length should be 100', () => {
     expect(idx.length).toBe(100);
@@ -46,7 +46,7 @@ test('renaming index', () => {
     expect(idx.rename('new name').name).toBe('new name')
 })
 
-let idx2 = new Index([1,2,2,3,4,5,5,1], {name:'index 2'})
+let idx2 = new Axis([1,2,2,3,4,5,5,1], {name:'index 2'})
 
 test('find duplicates, flagging all but the first occurence', () => {
     expect(idx2.duplicates('first').iloc(0)).toBe(false)
@@ -83,9 +83,9 @@ test('test any and all', () => {
     expect(idx2.duplicates().all()).toBe(false)
 })
 
-let idx3 = new Index([1,2,3,4,5,6,7,8,9,10], {name:"numbers"})
-let idx4 = new Index([2,4,6,8,10], {name:"evens"})
-let idx5 = new Index([1,3,5,7,9], {name:"odds"})
+let idx3 = new Axis([1,2,3,4,5,6,7,8,9,10], {name:"numbers"})
+let idx4 = new Axis([2,4,6,8,10], {name:"evens"})
+let idx5 = new Axis([1,3,5,7,9], {name:"odds"})
 
 test('test union/intersection/difference', () => {
     expect(idx4.duplicates().any()).toBe(false)

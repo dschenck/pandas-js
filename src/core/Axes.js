@@ -1,15 +1,14 @@
 import Immutable from 'immutable'
 import * as exceptions from './Exceptions'
 
-class Index{
+class Axis{
     constructor(values, options){
         if(values === undefined){
             this._values = Immutable.List()
         }
-        else if(values instanceof Index){
+        else if(values instanceof Axis){
             this._values  = values.values
             this._name    = values.name
-            return
         }
         else if(Immutable.List.isList(values)){
             this._values = values
@@ -38,25 +37,36 @@ class Index{
         return this._name
     }
     get length(){
-        return this.values.size
+        return this._values.size
     }
     get empty(){
         return this.length == 0
     }
+    get imap(){
+        if(this._map == undefined){
+            this._map = Immutable.Map(this._values.map((value, i) => {
+                return [value, i]
+            }))
+        }
+        return this._map
+    }
     copy(){
-        return new Index(this)
+        return new Axis(this)
+    }
+    has(label){
+        return this.imap.has(label)
     }
     iloc(index){
         if(index >= this.length || (this.length + index) < 0){
             throw new Error('Out of bounds error')
         }
-        return this.values.get(index)
+        return this._values.get(index)
     }
     loc(label){
         if(!this.has(label)){
             throw new Error('The index does not have ' + label)
         }
-        return this.values.indexOf(label)
+        return this.imap.get(label)
     }
     slice(begin, end){
         if(begin > this.length || (this.length + begin) < 0){
@@ -65,96 +75,93 @@ class Index{
         if(end && (end > this.length || (this.length + end) < 0)){
             throw new Error('Out of bounds error')
         }
-        return new Index(this.values.slice(begin, end), {name:this.name})
-    }
-    has(label){
-        return this.values.indexOf(label) !== -1
+        return new Axis(this._values.slice(begin, end), {name:this.name})
     }
     push(label, options){
         if(options && options.inplace){
-            this.values = this.values.push(label)
+            this._values = this._values.push(label)
             return
         }
-        return new Index(this.values.push(label), {name:this._name})
+        return new Axis(this._values.push(label), {name:this._name})
     }
     pop(options){
         if(options && options.inplace){
-            this.values = this.values.pop()
+            this._values = this._values.pop()
             return
         }
-        return new Index(this.values.pop(), {name:this._name})
+        return new Axis(this._values.pop(), {name:this._name})
     }
     rename(name, options){
         if(options && options.inplace){
             this._name = name
             return
         }
-        return new Index(this.values, {name:name})
+        return new Axis(this._values, {name:name})
     }
     sort(func, options){
         if(options && options.inplace){
-            this.values = this.values.sort(func)
+            this._values = this._values.sort(func)
             return
         }
-        return new Index(this.values.sort(func), {name:name})
+        return new Axis(this._values.sort(func), {name:name})
     }
     reverse(options){
         if(options && options.inplace){
-            this.values = this.values.reverse()
+            this._values = this._values.reverse()
             return this
         }
-        return new Index(this.values.reverse(), {name:name})
+        return new Axis(this._values.reverse(), {name:name})
     }
     map(func, options){
         if(options && options.inplace){
-            this.values = this.values.map(func)
+            this._values = this._values.map(func)
             return
         }
-        return new Index(this.values.map(func), {name:this._name})
+        return new Axis(this._values.map(func), {name:this._name})
     }
     filter(func, options){
         if(options && options.inplace){
-            this.values = this.values.filter(func)
+            this._values = this._values.filter(func)
             return
         }
-        return new Index(this.values.filter(func), {name:this._name})
+        return new Axis(this._values.filter(func), {name:this._name})
     }
     max(func){
         if(this.empty){
             throw new Error("Could not compute max on empty index")
         }
-        return this.values.max(func)
+        return this._values.max(func)
     }
     min(func){
         if(this.empty){
             throw new Error("Could not compute min on empty index")
         }
-        return this.values.min(func)
+        return this._values.min(func)
     }
     idxmin(){
-        return this.values.indexOf(this.min())
+        return this._values.indexOf(this.min())
     }
     idxmax(){
-        return this.values.indexOf(this.max())
+        return this._values.indexOf(this.max())
     }
     concat(other){
-        return new Index(this.values.concat(other), {name:name})
+        return new Axis(this._values.concat(other), {name:name})
     }
     union(other){
         if(this.duplicates().any()){
             throw new Error("Set operations like .union are not permitted on values with duplicates")
         }
-        if(other instanceof Index){
-            const values = this.values.toSet().union(other.values.toSet()).toList()
-            return new Index(values, {name:this._name})
+        if(other instanceof Axis){
+            const values = this._values.toSet().union(other._values.toSet()).toList()
+            return new Axis(values, {name:this._name})
         }
         else if(Immutable.List.isList(other)){
-            const values = this.values.toSet().union(other.toSet()).toList()
-            return new Index(values, {name:this._name})
+            const values = this._values.toSet().union(other.toSet()).toList()
+            return new Axis(values, {name:this._name})
         }
         else if(Array.isArray(other)){
-            const values = this.values.toSet().union(Immutable.Set(other)).toList()
-            return new Index(values, {name:this._name})
+            const values = this._values.toSet().union(Immutable.Set(other)).toList()
+            return new Axis(values, {name:this._name})
         }
         else{
             throw new Error("TypeError: Unable to perform union on " + other)
@@ -164,17 +171,17 @@ class Index{
         if(this.duplicates().any()){
             throw new Error("Set operations like .intersection are not permitted on values with duplicates")
         }
-        if(other instanceof Index){
-            const values = this.values.toSet().intersect(other.values.toSet()).toList()
-            return new Index(values, {name:this._name})
+        if(other instanceof Axis){
+            const values = this._values.toSet().intersect(other._values.toSet()).toList()
+            return new Axis(values, {name:this._name})
         }
         else if(Immutable.List.isList(other)){
-            const values = this.values.toSet().intersect(other.toSet()).toList()
-            return new Index(values, {name:this._name})
+            const values = this._values.toSet().intersect(other.toSet()).toList()
+            return new Axis(values, {name:this._name})
         }
         else if(Array.isArray(other)){
-            const values = this.values.toSet().intersect(Immutable.Set(other)).toList()
-            return new Index(values, {name:this._name})
+            const values = this._values.toSet().intersect(Immutable.Set(other)).toList()
+            return new Axis(values, {name:this._name})
         }
         else{
             throw new Error("TypeError: Unable to perform intersection on " + other)
@@ -184,17 +191,17 @@ class Index{
         if(this.duplicates().any()){
             throw new Error("Set operations like .difference are not permitted on values with duplicates")
         }
-        if(other instanceof Index){
-            const values = this.values.toSet().subtract(other.values.toSet()).toList()
-            return new Index(values, {name:this._name})
+        if(other instanceof Axis){
+            const values = this._values.toSet().subtract(other._values.toSet()).toList()
+            return new Axis(values, {name:this._name})
         }
         else if(Immutable.List.isList(other)){
-            const values = this.values.toSet().subtract(other.toSet()).toList()
-            return new Index(values, {name:this._name})
+            const values = this._values.toSet().subtract(other.toSet()).toList()
+            return new Axis(values, {name:this._name})
         }
         else if(Array.isArray(other)){
-            const values = this.values.toSet().subtract(Immutable.Set(other)).toList()
-            return new Index(values, {name:this._name})
+            const values = this._values.toSet().subtract(Immutable.Set(other)).toList()
+            return new Axis(values, {name:this._name})
         }
         else{
             throw new Error("TypeError: Unable to perform intersection on " + other)
@@ -213,40 +220,40 @@ class Index{
     }
     toList(native){
         if(native){
-            return this.values.toJS()
+            return this._values.toJS()
         }
-        return this.values
+        return this._values
     }
     mask(other){
-        if(other instanceof Index){
+        if(other instanceof Axis){
             if(other.length != this.length){
                 throw new Error("Masking index must be of length " + this.length + ", " + other.length + " given")
             }
-            const values = this.values.filter((value, i) => {
+            const values = this._values.filter((value, i) => {
                 return other.iloc(i)
             })
-            return new Index(values, {name:this._name})
+            return new Axis(values, {name:this._name})
         }
         else if(Immutable.List.isList(other)){
             if(other.size != this.length){
                 throw new Error("Masking list must be of length " + this.length + ", " + other.size + " given")
             }
-            const values = this.values.filter((value, i) => {
+            const values = this._values.filter((value, i) => {
                 return other.get(i)
             })
-            return new Index(values, {name:this._name})
+            return new Axis(values, {name:this._name})
         }
         else if(Array.isArray(other)){
             if(other.length != this.length){
                 throw new Error("Masking list must be of length " + this.length + ", " + other.length + " given")
             }
-            const values = this.values.filter((value, i) => {
+            const values = this._values.filter((value, i) => {
                 return other[i]
             })
-            return new Index(values, {name:this._name})
+            return new Axis(values, {name:this._name})
         }
         else{
-            throw new Error("Mask must be an Array/Immutable.List/pd.Index")
+            throw new Error("Mask must be an Array/Immutable.List/pd.Axis")
         }
     }
     asof(label, options){
@@ -272,10 +279,10 @@ class Index{
     }
     duplicates(keep){
         if(keep == "first"){
-            const values = this.values.map((value, i) => {
-                return this.values.indexOf(value) != i
+            const values = this._values.map((value, i) => {
+                return this._values.indexOf(value) != i
             })
-            return new Index(values, {name:this._name})
+            return new Axis(values, {name:this._name})
         }
         else if(keep == "last"){
             return this.reverse().duplicates("first").reverse()
@@ -283,10 +290,10 @@ class Index{
         else{
             const reversed = this.reverse(), length = this.length
 
-            const values = this.values.map((value, i) => {
-                return this.values.indexOf(value) != i || reversed.values.indexOf(value) != (length - i - 1)
+            const values = this._values.map((value, i) => {
+                return this._values.indexOf(value) != i || reversed._values.indexOf(value) != (length - i - 1)
             })
-            return new Index(values, {name:this._name})
+            return new Axis(values, {name:this._name})
         }
     }
     deduplicate(keep){
@@ -330,31 +337,31 @@ class Index{
     }
     astype(dtype){
         if(dtype == "string"){
-            const values = this.values.map(value => {
+            const values = this._values.map(value => {
                 return String(value)
             })
-            return new Index(values, {name:this.name})
+            return new Axis(values, {name:this.name})
         } 
         else if(dtype == "number"){
-            const values = this.values.map(value => {
+            const values = this._values.map(value => {
                 return Number(value)
             })
-            return new Index(values, {name:this.name})
+            return new Axis(values, {name:this.name})
         }
         else if(dtype == "boolean"){
-            const values = this.values.map(value => {
+            const values = this._values.map(value => {
                 return Boolean(value)
             })
-            return new Index(values, {name:this.name})
+            return new Axis(values, {name:this.name})
         }
         else if(dtype ==  "date"){
-            const values = this.values.map(value => {
+            const values = this._values.map(value => {
                 return new Date(value)
             })
-            return new Index(values, {name:this.name})
+            return new Axis(values, {name:this.name})
         }
         else if(dtype == "object"){
-            return new Index(this.values, {name:this.name})
+            return new Axis(this._values, {name:this.name})
         }
         else{
             throw new Error("Invalid dtype, " + dtype + " given")
@@ -362,4 +369,4 @@ class Index{
     }
 }
 
-export { Index }
+export { Axis }
