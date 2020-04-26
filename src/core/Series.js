@@ -1,8 +1,5 @@
-import Immutable       from 'immutable'
-
-import { Axis }       from './Axes'
-import * as exceptions from './Exceptions'
-import * as utils      from './utils'
+import { Axis }   from './Axes'
+import * as utils from './utils'
 
 export class Series{
     constructor(data, options){
@@ -11,18 +8,11 @@ export class Series{
             this._name   = data.name
             this._index  = data.index
         }
-        else if(Immutable.isList(data)){
-            this._values = data
-        }
-        else if(Immutable.isMap(data)){
-            this._values = Immutable.List(data.values())
-            this._index  = new Axis(data.keys())
-        }
         else if(Array.isArray(data)){
-            this._values = Immutable.List(data)
+            this._values = [...data]
         }
         else if(data === undefined){
-            this._values = Immutable.List()
+            this._values = []
         }
         else if(typeof data == "object"){
             if(data.data){
@@ -37,30 +27,33 @@ export class Series{
         }
         if(options && options.index){
             this._index = new Axis(options.index)
-            if(this._index.length != this._values.size){
-                throw new exceptions.ValueError('Index and data are of different length')
+            if(this._index.length != this._values.length){
+                throw new Error('Index and data are of different length')
             }
         }
         else{
-            this._index = new Axis(Immutable.Range(0, this._values.size).toList())
+            this._index = new Axis(utils.range(this._values.length))
         }
     }
-
+    /**
+     * Returns the values as a primitive list
+     */
     get values(){
-        return this._values
+        return [...this._values]
     }
 
+    /**
+     * Returns the index
+     */
     get index(){
         return this._index
     }
 
+    /**
+     * Sets a new index
+     */
     set index(indices){
-        try{
-            indices = new Axis(indices)
-        }
-        catch(error){
-            throw new Error('Could not convert indices to index')
-        }
+        indices = new Axis(indices)
         if(indices.length != this.length){
             throw new Error('Length mismatch error')
         }
@@ -82,7 +75,7 @@ export class Series{
      * @returns {number}
      */
     get length(){
-        return this._values.size
+        return this._values.length
     }
 
     /**
@@ -100,36 +93,34 @@ export class Series{
         }
         return new Series(this._values, {name:name, index:this.index})
     }
-
     /**
      * Retrieves the value at a given label (index value)
      * Should throw an error if a label is not present in the index
      * 
-     * @param {Array|Immutable|Series} labels the label(s) at which to retrieve a value
+     * @param {Array|Series} labels the label(s) at which to retrieve a value
      * @returns {*} return type depends on labels type
      */
     loc(labels){
         if(!utils.ismappable(labels)){
-            return this._values.get(this.index.loc(labels))
+            return this._values[this.index.indexOf(labels)]
         }
-        return labels.map(label => {
-            return this._values.get(this.index.loc(label))
-        })
+        return new Series(labels.map(label => this._values[this.index.indexOf(label)], {name:this.name, index:labels}))
     }
-
     /**
      * Retrives the value at a provided position (index)
      * 
      * @param {number} index the position (index)
      * @returns {*} the value at the provided position
      */
-    iloc(index){
-        if(index >= this.length || (this.length + index) < 0){
-            throw new Error('Out of bounds error')
+    iloc(indices){
+        if(!utils.ismappable(indices)){
+            if(indices >= this.length || (this.length + indices) < 0){
+                throw new Error('Out of bounds error')
+            }
+            return this._values[indices >= 0 ? indices : this.length + indices]
         }
-        return this._values.get(index)
+        return new Series(indices.map(i => this.iloc(i)), {name:this.name, index:indices.map(i => this.index.at(i))})
     }
-
     /**
      * Slices the series by position (index)
      * The upper bound is excluded
@@ -138,14 +129,14 @@ export class Series{
      * @param {number} [end=undefined] the index (0-based) of the end of the slice, excluded 
      * @returns {Series}
      */
-    slice(begin, end){
-        if(begin > this.length || (this.length + begin) < 0){
+    slice(start, stop){
+        if(start > this.length || (this.length + start) < 0){
             throw new Error('Out of bounds error')
         }
-        if(end && (end > this.length || (this.length + end) < 0)){
+        if(stop && (stop > this.length || (this.length + stop) < 0)){
             throw new Error('Out of bounds error')
         }
-        return new Series(this._values.slice(begin, end), {name:this.name, index:this.index.slice(begin, end)})
+        return new Series(this._values.slice(start, stop), {name:this.name, index:this.index.slice(start, stop)})
     }
 
     /**
@@ -176,6 +167,82 @@ export class Series{
     copy(){
         return new Series(this._values, {name:this.name, index:this.index})
     }
+    
+    /**
+     * Returns a new series with the values reversed relative to the index
+     * The index is not reversed
+     * e.g. first > last
+     * 
+     * @param {*} options options.inplace changes the values in-place
+     * @returns {Series} 
+     */
+    reverse(options){
+        if(options && options.inplace){
+            this._values = [...this._values].reverse()
+            this._index  = this.index
+            return
+        }
+        return new Series([...this._values].reverse(), {name:this.name, index:this.index})
+    }
+
+    /**
+     * Map over each of the values in the series and apply a function
+     * The function receives the current value and the positional index
+     * 
+     * @param {function} func function to compute over each value
+     * @param {*} options options.inplace to transform in-place
+     * @returns {Series}
+     */
+    map(func, options){
+        if(options && options.inplace){
+            this._values = this._values.map(func)
+            return
+        }
+        return new Series(this._values.map(func), {name:this.name, index:this.index})
+    }
+
+    /**
+     * Filters a series using a filtering function
+     * Only values where the function returns true are kept
+     * 
+     * @param {function} func 
+     * @param {*} options 
+     * @returns {Series}
+     */
+    filter(func, options){
+        const mask = this._values.map((value, i) => func(value, i))
+        
+        return new Series(
+            this._values.filter((value, i) => mask[i]), 
+            {name:this.name, index:this.index.filter((v, i) => mask[i])
+        })
+    }
+    
+    /**
+     * Reduces the series to a single value
+     * @param {*} func 
+     * @param {*} initvalue 
+     */
+    reduce(func, initvalue){
+        return this._values.reduce(func, initvalue)
+    }
+    
+    /**
+     * Filter a series by an iterable
+     * 
+     * @param {Series|Array} other 
+     * @param {*} options options to pass to this.combine
+     * @returns {Series}
+     */
+    mask(other, options){
+        if(other instanceof Series || Array.isArray(other)){
+            const mask = this.combine(other, (a, b, i) => {
+                return b == true
+            }, options).values
+            return this.filter((value, i) => mask[i])
+        }
+        throw new Error('Could not mask with other')
+    }
 
     /**
      * Returns a boolean series flagging non-numeric types
@@ -204,33 +271,17 @@ export class Series{
      * 
      * @returns {boolean}
      */
-    all(strict){
-        for(let i = 0, len = this.length; i < len; i++){
-            if(strict && this._values.get(i) !== true){
-                return false
-            }
-            else if(this._values.get(i) == false){
-                return false
-            }
-        }
-        return true
+    all(){
+        return this.reduce((prev, curr) => curr ? prev && true: false, true)
     }
 
     /**
-     * Checks one of the values is truthy
+     * Checks at least one of the values is truthy
      * 
      * @returns {boolean}
      */
-    any(strict){
-        for(let i = 0, len = this.length; i < len; i++){
-            if(strict && this._values.get(i) === true){
-                return true
-            }
-            else if(this._values.get(i) == true){
-                return true
-            }
-        }
-        return false
+    any(){
+        return this.reduce((prev, curr) => curr ? (prev || true) : (prev || false), false)
     }
     
     /**
@@ -296,7 +347,7 @@ export class Series{
             if(i == 0){
                 if(arguments.length == 2){
                     if(typeof initially == "function"){
-                        values.push(initially(this._values.get(0)))
+                        values.push(initially(this._values[0]))
                     }
                     else{
                         values.push(initially)
@@ -307,7 +358,7 @@ export class Series{
                 }
             }
             else{
-                values.push(reducer(values[i-1], this._values.get(i)))
+                values.push(reducer(values[i-1], this._values[i]))
             }
         }
         return new Series(values, {index:this.index, name:this.name})
@@ -474,12 +525,6 @@ export class Series{
                 throw new Error('Series must be of equal length')
             }
             return this.map((value, i) => func(value, other[i], i))
-        }
-        else if(Immutable.isList(other)){
-            if(other.size !== this.length){
-                throw new Error('Series must be of equal length')
-            }
-            return this.map((value, i) => func(value, other.get(i), i))
         }
         return this.map((value, i) => func(value, other, i))
     }
@@ -812,74 +857,7 @@ export class Series{
         }, null)
     }
 
-    /**
-     * Returns a new series with the values reversed relative to the index
-     * The index is not reversed
-     * e.g. first > last
-     * 
-     * @param {*} options options.inplace changes the values in-place
-     * @returns {Series} 
-     */
-    reverse(options){
-        if(options && options.inplace){
-            this._values = this._values.reverse()
-            this._index  = this.index
-            return
-        }
-        return new Series(this._values.reverse(), {name:this.name, index:this.index})
-    }
-
-    /**
-     * Map over each of the values in the series and apply a function
-     * The function receives the current value and the positional index
-     * 
-     * @param {function} func function to compute over each value
-     * @param {*} options options.inplace to transform in-place
-     * @returns {Series}
-     */
-    map(func, options){
-        if(options && options.inplace){
-            this._values = this._values.map(func)
-            return
-        }
-        return new Series(this._values.map(func), {name:this.name, index:this.index})
-    }
-
-    /**
-     * Filters a series using a filtering function
-     * Only values where the function returns true are kept
-     * 
-     * @param {function} func 
-     * @param {*} options 
-     * @returns {Series}
-     */
-    filter(func, options){
-        const mask = this._values.map((value, i) => {
-            return func(value, i)
-        })
-        
-        return new Series(
-            this._values.filter((value, i) => mask.get(i)), 
-            {name:this.name, index:this.index.filter((value, i) => mask.get(i))
-        })
-    }
     
-    /**
-     * Filter a series by an iterable
-     * 
-     * @param {Series|Array|Immutable.List} other 
-     * @param {*} options options to pass to this.combine
-     * @returns {Series}
-     */
-    mask(other, options){
-        if(other instanceof Series || Array.isArray((other) || Immutable.isList(other))){
-            const mask = this.combine(other, (a, b, i) => {
-                return b == true
-            }, options).values
-            return this.filter((value, i) => mask.get(i))
-        }
-        throw new Error('Could not mask with other')
-    }
 
     /**
      * Replaces values in this by values in other if test fails
@@ -977,7 +955,7 @@ export class Series{
      */
     asof(label, options){
         const loc = this.index.asof(label, options)
-        return this._values.get(this.index.loc(loc))
+        return this._values[this.index.loc(loc)]
     }
 
     /**
@@ -1016,14 +994,14 @@ export class Series{
                 if(i - periods < 0){
                     return NaN
                 }
-                return this._values.get(i) - this._values.get(i - periods)
+                return this._values[i] - this._values[i - periods]
             })
         }
         return this.map((value, i) => {
             if(i - periods >= this.length){
                 return NaN
             }
-            return this._values.get(i) - this._values.get(i - periods)
+            return this._values[i] - this._values[i - periods]
         })
     }
 
@@ -1043,7 +1021,7 @@ export class Series{
                 if(i < offset){
                     return fill
                 }
-                return this._values.get(i-offset)
+                return this._values[i-offset]
             })
         }
         else if(offset < 0){
@@ -1051,7 +1029,7 @@ export class Series{
                 if(i >= (this.length + offset)){
                     return fill
                 }
-                return this._values.get(i-offset)
+                return this._values[i-offset]
             })
         }
         return this.copy()
@@ -1090,7 +1068,7 @@ export class Series{
     idxmax(){
         const max = this.max()
         for(let i = 0, len = this.length; i < len; i++){
-            if(this._values.get(i) == max){
+            if(this._values[i] == max){
                 return this.index.iloc(i)
             }
         }
@@ -1105,7 +1083,7 @@ export class Series{
     idxmin(){
         const min = this.min()
         for(let i = 0, len = this.length; i < len; i++){
-            if(this._values.get(i) == min){
+            if(this._values[i] == min){
                 return this.index.iloc(i)
             }
         }
@@ -1124,28 +1102,6 @@ export class Series{
     }
 
     /**
-     * Converts the series to an array or Immutable.List
-     * 
-     * @param {boolean} index 
-     * @param {boolean} native 
-     */
-    toList(index = false, native = false){
-        if(!index){
-            if(native){
-                return this._values.toJS()
-            }
-            return this._values
-        }
-        if(native){
-            return this.map((value, i) => {
-                return [this.index.iloc(i), value]
-            }).toJS()
-        }
-        return this.map((value, i) => {
-            return [this.index.iloc(i), value]
-        })
-    }
-    /**
      * Converts the series to string, formatting toFixed
      * 
      * @param {number} [n=0] the number of significant digits 
@@ -1154,32 +1110,5 @@ export class Series{
         return this.astype("number").map((value, i) => {
             return value.toFixed(n)
         })
-    }
-    /**
-     * Reindex this series to another iterable
-     * 
-     * @param {*} index 
-     * @param {*} options 
-     */
-    reindex(index, options){
-        const values = index.map((idx, i) => {
-            if(this.index.has(idx)){
-                return this.loc(idx)
-            }
-            else{
-                if(options && options.fill){
-                    return options.fill
-                }
-                return NaN
-            }
-        })
-        return new Series(values, {name:this.name, index:index})
-    }
-    /**
-     * Returns a list of unique values
-     * @returns {Immutable.List}
-     */
-    uniques(){
-        return this._values.toSet().toList()
     }
 }

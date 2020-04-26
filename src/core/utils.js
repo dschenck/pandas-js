@@ -4,7 +4,7 @@
  * @param {any} value the tested value
  * @returns {boolean} 
  */
-export function isboolean(value){
+export function isBoolean(value){
     return typeof value === 'boolean' || value instanceof Boolean
 }
 
@@ -14,7 +14,7 @@ export function isboolean(value){
  * @param {any} value the tested value
  * @returns {boolean}
  */
-export function isstring(value){
+export function isString(value){
     return typeof value == 'string' || value instanceof String
 }
 
@@ -23,7 +23,7 @@ export function isstring(value){
  * @param {any} value the tested value
  * @returns {boolean}
 */
-export function isnumber(value){
+export function isNumber(value){
     return typeof value == 'number' || value instanceof Number
 }
 
@@ -33,7 +33,7 @@ export function isnumber(value){
  * @param {any} value the tested value
  * @returns {boolean}
  */
-export function isdefined(value){
+export function isDefined(value){
     return !(value !== value 
         || value === undefined 
         || value === null 
@@ -48,8 +48,8 @@ export function isdefined(value){
  * @param {any} value the tested value
  * @returns {boolean}
  */
-export function isnumeric(value){
-    return isdefined(value) && (isnumber(value) || isboolean(value))
+export function isNumeric(value){
+    return isDefined(value) && (isNumber(value) || isBoolean(value))
 }
 
 /**
@@ -61,7 +61,7 @@ export function isnumeric(value){
  * @returns {boolean}
  */
 export function isnan(value){
-    return !isnumeric(value)
+    return !isNumeric(value)
 }
 
 /**
@@ -80,7 +80,7 @@ export function isNaN(value){
  * @returns {boolean}
  */
 export function isna(value){
-    return !isdefined(value)
+    return !isDefined(value)
 }
 
 /**
@@ -100,7 +100,7 @@ export function isNA(value){
  */
 export function isprimitive(value){
     return (
-        isnumber(value) || isstring(value) || isboolean(value) 
+        isNumber(value) || isString(value) || isBoolean(value) 
         || value === null
         || value === undefined
         || value !== value
@@ -120,4 +120,101 @@ export function ismappable(value){
     catch{
         return false
     }
+}
+
+/**
+ * Checks whether value is a list of lists
+ * 
+ * @param {*} value the tested value
+ * @returns {boolean}
+ */
+export function isListOfList(value){
+    if(Array.isArray(value)){
+        for(let i = 0, len = value.length; i < len; i++){
+            if(!Array.isArray(value[i])){
+                return false
+            }
+        }
+    }
+    return true
+}
+
+/**
+ * Checks whether a value is a list of records
+ * @param {*} value the tested value
+ * @returns {boolean}
+ */
+export function isListOfRecords(value){
+    if(Array.isArray(value)){
+        for(let i = 0, len = value.length; i < len; i++){
+            if(typeof value[i] !== "object"){
+                return false
+            }
+        }
+        return true
+    }
+    return false
+}
+
+
+/**
+ * Create a range of integers
+ */
+export function range(start, end = undefined, step = 1){
+    if(end == undefined) end = [start, start = 0][0]
+    const arr = []
+    for(let i = start; i < end; i = i + step){
+        arr.push(i)
+    }
+    return arr
+}
+
+/**
+ * Returns the transpose of a list of list
+ * 
+ * @param values uniform list of lists
+ * @returns list of list
+ */
+export function transpose(values){
+    return values.reduce((transpose, row) => {
+        transpose.forEach((column, c) => column.push(row[c]))
+        return transpose
+    }, values[0].map(() => []))
+}
+
+/**
+ * Returns true is all values are truthy
+ * 
+ * @param strict
+ * @returns {bool}
+ */
+export function all(values, strict=false){
+    for(let i = 0, len = values.length; i < len; i++){
+        if(strict){
+            if(values[i] !== true){
+                return false
+            }
+        }
+        if(values[i] != true){
+            return false
+        }
+    }
+    return true
+}
+
+/**
+ * Returns true if any value is true
+ */
+export function any(values, strict=false){
+    for(let i = 0, len = values.length; i < length; i++){
+        if(strict){
+            if(values[i] === true){
+                return true
+            }
+        }
+        if(values[i] == true){
+            return true
+        }
+    }
+    return false
 }
