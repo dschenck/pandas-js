@@ -101,10 +101,10 @@ export class Series{
      * @returns {*} return type depends on labels type
      */
     loc(labels){
-        if(!utils.ismappable(labels)){
-            return this._values[this.index.indexOf(labels)]
+        if(utils.ismappable(labels)){
+            return new Series(labels.map(label => this.loc(label), {name:this.name, index:labels}))
         }
-        return new Series(labels.map(label => this._values[this.index.indexOf(label)], {name:this.name, index:labels}))
+        return this._values[this.index.indexOf(labels)]
     }
     /**
      * Retrives the value at a provided position (index)
@@ -113,13 +113,13 @@ export class Series{
      * @returns {*} the value at the provided position
      */
     iloc(indices){
-        if(!utils.ismappable(indices)){
-            if(indices >= this.length || (this.length + indices) < 0){
-                throw new Error('Out of bounds error')
-            }
-            return this._values[indices >= 0 ? indices : this.length + indices]
+        if(utils.ismappable(indices)){
+            return new Series(indices.map(i => this.iloc(i)), {name:this.name, index:indices.map(i => this.index.at(i))})
         }
-        return new Series(indices.map(i => this.iloc(i)), {name:this.name, index:indices.map(i => this.index.at(i))})
+        if(indices >= this.length || (this.length + indices) < 0){
+            throw new Error('Out of bounds error')
+        }
+        return this._values[indices >= 0 ? indices : this.length + indices]
     }
     /**
      * Slices the series by position (index)
@@ -211,7 +211,10 @@ export class Series{
      */
     filter(func, options){
         const mask = this._values.map((value, i) => func(value, i))
-        
+        if(options && options.inplace){
+            this._values = this._values.filter((value, i) => mask[i])
+            return
+        }
         return new Series(
             this._values.filter((value, i) => mask[i]), 
             {name:this.name, index:this.index.filter((v, i) => mask[i])
@@ -307,6 +310,7 @@ export class Series{
             return utils.isNaN(curr) ? prev : prev + curr
         }, 0)
     }
+
     /**
      * Counts the number of values
      * Use skipnan=false to count non-missing values
@@ -323,6 +327,7 @@ export class Series{
             return utils.isNaN(curr) ? prev : prev + 1
         }, 0)
     }
+
     /**
      * Computes the mean (average) of the series
      * 
@@ -334,6 +339,7 @@ export class Series{
         if(count == 0) return NaN
         return this.sum(skipnan) / this.count(skipnan)
     }
+
     /**
      * Applies a function cum, passing the previous result and current value
      * 
