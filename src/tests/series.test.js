@@ -111,6 +111,20 @@ describe('Typing', () => {
     })
 })
 
+describe("first and last", () => {
+    let s = new Series([NaN, "A", 1, 0, 10, 20, "B", undefined])
+
+    test("first", () => {
+        expect(s.first()).toBe(1)
+        expect(s.first(false)).toBe("A")
+    })
+
+    test("last", () => {
+        expect(s.last()).toBe(20)
+        expect(s.last(false)).toBe("B")
+    })
+})
+
 describe('missing values', () => {
     test('finding missing values', () => {
         let s = new Series(["A", 0, 1, true, false, NaN, undefined, null])

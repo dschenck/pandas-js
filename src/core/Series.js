@@ -337,6 +337,30 @@ export class Series{
     idxmin(){
         return utils.isNaN(this.min()) ? NaN : this._values.indexOf(this.min())
     }
+
+    /**
+     * Returns the first numeric (or non-missing) value
+     */
+    first(skipnan = true){
+        for(let i = 0; i < this.length; i++){
+            if(!(skipnan ? utils.isNaN(this._values[i]) : utils.isNA(this._values[i]))){
+                return this._values[i]
+            }
+        }
+        return NaN
+    }
+
+    /**
+     * Returns the first numeric (or non-missing) value
+     */
+    last(skipnan = true){
+        for(let i = this.length - 1 ; i >= 0; i--){
+            if(!(skipnan ? utils.isNaN(this._values[i]) : utils.isNA(this._values[i]))){
+                return this._values[i]
+            }
+        }
+        return NaN
+    }
     
     /**
      * Filters a series using a filtering function
@@ -866,7 +890,7 @@ export class Series{
     /**
      * Sorts the series either by its index or by values
      * 
-     * @param {*} by one of 'index' or 'values'
+     * @param {*} options
      */
     sort(options){
         let [index, values] = [null, null]
