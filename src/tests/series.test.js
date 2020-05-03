@@ -1,5 +1,5 @@
 import { Series }  from '../core/Series'
-import { Axis }    from '../core/Axes'
+import { Index }    from '../core/Index'
 import * as utils  from '../core/utils'
 
 let s1 = new Series([0,1,2,3,4,5,6,7], {name:'integers', index:["A","B","C","D","E","F","G","H"]})
@@ -9,7 +9,7 @@ describe('Creating a new series', () => {
         let s = new Series()
         expect(s).toBeInstanceOf(Series)
         expect(s.length).toBe(0)
-        expect(s.index).toBeInstanceOf(Axis)
+        expect(s.index).toBeInstanceOf(Index)
         expect(s.index.length).toBe(0)
         expect(s.name).toBe(undefined)
     })
@@ -18,7 +18,7 @@ describe('Creating a new series', () => {
         expect(s).toBeInstanceOf(Series)
         expect(s.length).toBe(3)
         expect(s.name).toBe(undefined)
-        expect(s.index).toBeInstanceOf(Axis)
+        expect(s.index).toBeInstanceOf(Index)
         expect(s.index.values).toEqual([0,1,2])
     })
     test('with a name', () => {
@@ -39,7 +39,7 @@ describe('Changing the index in-place', () => {
     })
 })
 
-describe('Axising by value', () => {
+describe('Indexing by value', () => {
     test('requesting a single label', () => {
         let s = new Series([0,1,2,3,4,5,6], {index:["A",9,true,false,null,undefined,NaN]})
         expect(s.loc("A")).toBe(0)
@@ -60,7 +60,7 @@ describe('Axising by value', () => {
     })
 })
 
-describe('Axising by position', () => {
+describe('Indexing by position', () => {
     test('requesting a single label', () => {
         let s = new Series([0,1,2,3,4,5,6], {index:["A",9,true,false,null,undefined,NaN]})
         expect(s.iloc(0)).toBe(0)
@@ -167,24 +167,19 @@ describe('descriptive statistics', () => {
 
         let s2 = new Series([0,1,2,3,NaN,"A"])
         expect(s2.sum()).toBe(6)
-        expect(s2.sum(false)).toBe(NaN)
         expect(s2.count()).toBe(4)
         expect(s2.count(false)).toBe(5)
-        expect(s2.mean(false)).toBe(NaN)
 
         let s3 = new Series(["A", 1, 2.5, true, false, NaN, undefined, Infinity, -Infinity, null])
         expect(s3.sum()).toBe(4.5)
         expect(s3.count()).toBe(4)
         expect(s3.mean()).toBe(1.125)
-        expect(s3.mean(false)).toBe(NaN)
     })
 
     test('min and max', () => {
         let s3 = new Series(["A", 1, 2.5, true, false, NaN, undefined, Infinity, -Infinity, null])
-        expect(s3.min()).toBe(0)
-        expect(s3.min(false)).toBe(NaN)
+        expect(s3.min()).toBe(false)
         expect(s3.max()).toBe(2.5)
-        expect(s3.max(false)).toBe(NaN)
     })
 })
 
@@ -195,10 +190,9 @@ describe('cumulative operations', () => {
 
         let s2 = new Series([NaN,1,2,3,NaN,5])
         expect(s2.cumsum().values).toEqual([NaN,1,3,6,6,11])
-        expect(s2.cumsum(false).values).toEqual([NaN, NaN, NaN, NaN, NaN, NaN])
 
         let s3 = new Series([1,2,3,NaN,4])
-        expect(s3.cumsum(false).values).toEqual([1, 3, 6, NaN, NaN])
+        expect(s3.cumsum().values).toEqual([1, 3, 6, 6, 10])
     })
     test('cumulative product', () => {
         let s1 = new Series([1,2,3,4,5])
@@ -206,10 +200,9 @@ describe('cumulative operations', () => {
 
         let s2 = new Series([NaN,1,2,3,NaN,5])
         expect(s2.cumprod().values).toEqual([NaN,1,2,6,6,30])
-        expect(s2.cumprod(false).values).toEqual([NaN, NaN, NaN, NaN, NaN, NaN])
 
         let s3 = new Series([1,2,3,NaN,4])
-        expect(s3.cumprod(false).values).toEqual([1, 3, 6, NaN, NaN])
+        expect(s3.cumprod().values).toEqual([1,2,6,6,24])
     })
     test('cumulative minimum', () => {
         let s1 = new Series([0,-1,2,-3,5])
@@ -217,10 +210,10 @@ describe('cumulative operations', () => {
 
         let s2 = new Series([NaN,0,-1,2,-3,5])
         expect(s2.cummin().values).toEqual([NaN,0,-1,-1,-3,-3])
-        expect(s2.cummin(false).values).toEqual([NaN, NaN, NaN, NaN, NaN, NaN])
+        expect(s2.cummin().values).toEqual([NaN, 0, -1, -1, -3, -3])
 
         let s3 = new Series([0,-1,2,-3,NaN,5])
-        expect(s3.cummin(false).values).toEqual([0,-1,-1,-3,NaN,NaN])
+        expect(s3.cummin().values).toEqual([0,-1,-1,-3,-3,-3])
     })
     test('cumulative maximum', () => {
         let s1 = new Series([0,-1,2,-3,5])
@@ -228,10 +221,6 @@ describe('cumulative operations', () => {
 
         let s2 = new Series([NaN,0,-1,2,-3,5])
         expect(s2.cummax().values).toEqual([NaN,0,0,2,2,5])
-        expect(s2.cummax(false).values).toEqual([NaN, NaN, NaN, NaN, NaN, NaN])
-
-        let s3 = new Series([0,-1,2,-3,NaN,5])
-        expect(s3.cummax(false).values).toEqual([0,0,2,2,NaN,NaN])
     })
 })
 
@@ -317,7 +306,7 @@ describe('Reversing', () => {
         expect(s1.reverse().values).toEqual(
             [7,6,5,4,3,2,1,0]
         )
-        expect(s1.reverse().loc("A")).toBe(s1.loc("H"))
+        expect(s1.reverse().loc("A")).toBe(s1.loc("A"))
     })
 
     test('double-reversing', () => {
@@ -330,7 +319,7 @@ describe('Reversing', () => {
 describe('Updating', () => {
     test('conditional witho other series', () => {
         let s1 = new Series([0,1,2,3,4,5,6,7])
-        let s2 = s1.reverse()
+        let s2 = new Series([7,6,5,4,3,2,1,0])
 
         expect(s1.where((value => value % 2 == 0), s2).values).toEqual(
             [0,6,2,4,4,2,6,0]
