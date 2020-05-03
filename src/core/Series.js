@@ -351,6 +351,18 @@ export class Series{
     }
 
     /**
+     * Returns the index of the first numeric (or non-missing value)
+     */
+    idxfirst(skipnan = true){
+        for(let i = 0; i < this.length; i++){
+            if(!(skipnan ? utils.isNaN(this._values[i]) : utils.isNA(this._values[i]))){
+                return i
+            }
+        }
+        return NaN
+    }
+
+    /**
      * Returns the first numeric (or non-missing) value
      */
     last(skipnan = true){
@@ -362,6 +374,18 @@ export class Series{
         return NaN
     }
     
+    /**
+     * Returns the index of the last numeric (or non-missing) value
+     */
+    idxlast(skipnan = true){
+        for(let i = this.length - 1 ; i >= 0; i--){
+            if(!(skipnan ? utils.isNaN(this._values[i]) : utils.isNA(this._values[i]))){
+                return i
+            }
+        }
+        return NaN
+    }
+
     /**
      * Filters a series using a filtering function
      * Only values where the function returns true are kept

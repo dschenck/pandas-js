@@ -123,6 +123,16 @@ describe("first and last", () => {
         expect(s.last()).toBe(20)
         expect(s.last(false)).toBe("B")
     })
+
+    test("first index", () => {
+        expect(s.idxfirst()).toBe(2)
+        expect(s.idxfirst(false)).toBe(1)
+    })
+
+    test("last index", () => {
+        expect(s.idxlast()).toBe(5)
+        expect(s.idxlast(false)).toBe(6)
+    })
 })
 
 describe('missing values', () => {
