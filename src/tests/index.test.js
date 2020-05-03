@@ -103,6 +103,11 @@ test("union of one axis and one list",() => {
     expect(i1.union(i2).values).toEqual([1,2,3,4,5,6,7,8,9,10])
 })
 
+test("sorting", () => {
+    const idx = new Index([1,3,2,5,0,4])
+    expect(idx.sort().values).toEqual([0,1,2,3,4,5])
+    expect(idx.values).toEqual([1,3,2,5,0,4])
+})
 
 
 

@@ -420,6 +420,24 @@ describe("Is in", () => {
     })
 })
 
+describe("sorting", () => {
+    let s1 =  new Series([1,5,7,3], {index:[1,4,3,2]})
+
+    test("sorting by index", () => {
+        expect(s1.sort({by:"index"}).values).toEqual([1,3,7,5])
+        expect(s1.sort({by:"index"}).index.values).toEqual([1,2,3,4])
+    })
+
+    test("sorting by value", () => {
+        expect(s1.sort({by:"values"}).values).toEqual([1,3,5,7])
+        expect(s1.sort({by:"values"}).index.values).toEqual([1,2,4,3])
+    })
+
+    test("sorting in reverse", () => {
+        expect(s1.sort({by:"index", ascending:false}).values).toEqual([5,7,3,1])
+        expect(s1.sort({by:"index", ascending:false}).index.values).toEqual([4,3,2,1])
+    })
+})
 
 
 

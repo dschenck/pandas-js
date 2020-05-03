@@ -863,15 +863,41 @@ export class Series{
         }
     }
 
-    sort(by = "index"){
-        const items = this.items.sort()
+    /**
+     * Sorts the series either by its index or by values
+     * 
+     * @param {*} by one of 'index' or 'values'
+     */
+    sort(options){
+        let [index, values] = [null, null]
+
+        if(options === undefined || options.by === undefined || options.by == "values"){
+            [ index, values ] = this.items.sort((a, b) => {
+                return a[1] > b[1] ? 1 : -1
+            }).reduce((acc, curr) => {
+                acc[0].push(curr[0])
+                acc[1].push(curr[1])
+                return acc
+            },[[],[]])
+        }
+        else if(options.by == "index"){
+            index  = this.index.sort()
+            values = index._values.map(idx => this.loc(idx))  
+        }
+
+        if(options && options.ascending === false){
+            index  = index.reverse()
+            values = values.reverse()
+        }
+
+        if(options && options.inplace){
+            this.index  = index
+            this.values = values
+            return
+        }
+        
+        return new Series(values, {index:index, name:this.name})
     }
-
-
-
-
-
-    
 
     /**
      * Drop rows where label in labels
