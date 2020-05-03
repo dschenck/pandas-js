@@ -900,6 +900,17 @@ export class Series{
     }
 
     /**
+     * Returns the rank of the values
+     * @param {*} options 
+     */
+    rank(options){
+        const sorted = this.sort(options)
+        const count  = (options && options.normalized) ? this.count() : 1
+        return new Series(this.index.map(idx => (sorted.index.indexOf(idx) + 1) / count).values, {index: this.index, name:this.name})
+    }
+
+
+    /**
      * Drop rows where label in labels
      * TODO should be able to pass a single label
      * 

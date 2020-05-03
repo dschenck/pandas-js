@@ -439,6 +439,21 @@ describe("sorting", () => {
     })
 })
 
+describe("ranking", () => {
+    let s1 =  new Series([1,5,7,3], {index:[1,4,3,2]})
+
+    test("ranking in ascending order", () => {
+        expect(s1.rank().values).toEqual([1,3,4,2])
+    })
+    test("ranking in descending order", () => {
+        expect(s1.rank({ascending:false}).values).toEqual([4,2,1,3])
+    })
+    test("normalized ranking", () => {
+        expect(s1.rank({normalized:true}).values).toEqual([1/4,3/4,1,2/4])
+    })
+
+})
+
 
 
 
