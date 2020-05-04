@@ -27,6 +27,14 @@ export function isNumber(value){
     return typeof value == 'number' || value instanceof Number
 }
 
+/**
+ * Checks a value is a date
+ * @param {*} value 
+ */
+export function isDate(value){
+    return value instanceof Date && isFinite(value)
+}
+
 /** Checks a value is defined
  * Undefined values are NaN, null, undefined, +/-Infinity
  * 
@@ -98,7 +106,7 @@ export function isNA(value){
  * @param {*} value the tested value
  * @returns {boolean}
  */
-export function isprimitive(value){
+export function isPrimitive(value){
     return (
         isNumber(value) || isString(value) || isBoolean(value) 
         || value === null
@@ -217,4 +225,24 @@ export function any(values, strict=false){
         }
     }
     return false
+}
+
+/**
+ * Sorting function between two values
+ */
+export function defaultsort(a, b, options){
+    if((isNumeric(a) && isNumeric(b)) || (isString(a) && isString(b))){
+        return a > b ? 1 : -1
+    }
+    if(isNumeric(a) && isString(b)){
+        throw new Error("TypeError: defaultsort comparison not supported between strings and numeric values")
+    }
+    if(isNA(a) || isNA(b)){
+        if(isNA(a)) return (!options || options.na == "last") ? 1 : -1
+        if(isNA(b)) return (!options || options.na == "last") ? -1 : 1
+    }
+    if(!isPrimitive(a) || !isPrimitive(b)){
+        throw new Error("TypeError: defaultsort comparison is only supported for primitive types")
+    }
+    return defaultsort(b, a) == 1 ? -1 : 1
 }
