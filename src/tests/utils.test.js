@@ -48,6 +48,32 @@ describe("default sorting", () => {
     })
 })
 
+describe("is iterable", () => {
+    test("string", () => {
+        expect(utils.isIterable("hello")).toBe(true)
+    })
+    test("array", () => {
+        expect(utils.isIterable([])).toBe(true)
+        expect(utils.isIterable([1,2,3,])).toBe(true)
+    })
+    test("sets", () => {
+        expect(utils.isIterable(new Set())).toBe(true)
+    })
+    test("maps", () => {
+        expect(utils.isIterable(new Map())).toBe(true)
+    })
+    test("object", () => {
+        expect(utils.isIterable({})).toBe(false)
+        expect(utils.isIterable({name:"david"})).toBe(false)
+    })
+    test("other types", () => {
+        expect(utils.isIterable(1)).toBe(false)
+        expect(utils.isIterable(false)).toBe(false)
+        expect(utils.isIterable(true)).toBe(false)
+        expect(utils.isIterable(new Date(2020, 1, 1))).toBe(false)
+    })
+})
+
 
 
 describe('test isListOfList', () => {

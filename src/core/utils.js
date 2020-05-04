@@ -246,3 +246,11 @@ export function defaultsort(a, b, options){
     }
     return defaultsort(b, a) == 1 ? -1 : 1
 }
+
+/**
+ * Checks wether an object is iterable
+ */
+export function isIterable(obj){
+    if (obj == null) return false
+    return typeof obj[Symbol.iterator] === 'function';
+}
