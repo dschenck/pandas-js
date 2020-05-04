@@ -1,5 +1,6 @@
 import { Index }   from './Index'
-import * as utils from './utils'
+import { Grouper } from './Grouper'
+import * as utils  from './utils'
 
 export class Series{
     constructor(data, options){
@@ -83,6 +84,20 @@ export class Series{
             throw new Error('Length mismatch error')
         }
         this._index = index
+    }
+
+    [Symbol.iterator]() {
+        let index = 0;
+    
+        return {
+            next: () => {
+                if (index < this._values.length) {
+                    return {value: this._values[index++], done: false}
+                } else {
+                    return {done: true}
+                }
+            }
+        }
     }
 
     /**
