@@ -4,25 +4,28 @@ import * as utils  from './utils'
 
 export class Series{
     constructor(data, options){
-        if(data instanceof Series){
+        if(data === undefined){
+            this._values = []
+        }
+        else if(data instanceof Series){
             this._values = data.values
             this._name   = data.name
             this._index  = data.index
         }
-        else if(Array.isArray(data)){
+        else if(utils.isIterable(data) && !utils.isString(data)){
             this._values = [...data]
         }
-        else if(data === undefined){
-            this._values = []
-        }
         else if(typeof data == "object"){
-            if(data.data){
+            if(data.data && data.index){
                 return new Series(data.data, {name:data.name, index:data.index})
             }
+            this._values = Object.values(data)
+            this._index  = new Index(Object.keys(data))
         }
         else{ 
             throw new TypeError('Could not parse the data')
         }
+
         if(options && options.name){
             this._name = options.name
         }
@@ -32,7 +35,7 @@ export class Series{
                 throw new Error('Index and data are of different length')
             }
         }
-        else{
+        else if(this._index === undefined){
             this._index = new Index(utils.range(this._values.length))
         }
     }
@@ -936,7 +939,7 @@ export class Series{
 
         if(options === undefined || options.by === undefined || options.by == "values"){
             [ index, values ] = this.items.sort((a, b) => {
-                return utils.defaultsort(a, b, {na:(options ? options.na : "last")})
+                return utils.defaultsort(a[1], b[1], {na:(options ? options.na : "last")})
             }).reduce((acc, curr) => {
                 acc[0].push(curr[0])
                 acc[1].push(curr[1])
