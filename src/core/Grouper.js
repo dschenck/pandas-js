@@ -1,7 +1,7 @@
 export class Grouper{
     constructor(underlying){
-        this.underlying = this.underlying
-        this.groups = new Map()
+        this.underlying = underlying
+        this.groups     = new Map()
     }
     add(group, index, value){
         if(!this.groups.has(group)) this.groups[group] = [[],[]]
