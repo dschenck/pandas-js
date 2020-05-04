@@ -235,14 +235,14 @@ export function defaultsort(a, b, options){
         return a > b ? 1 : -1
     }
     if(isNumeric(a) && isString(b)){
-        throw new Error("TypeError: defaultsort comparison not supported between strings and numeric values")
+        throw new Error(`TypeError: defaultsort comparison not supported between strings and numeric values (${a} & ${b})`)
     }
     if(isNA(a) || isNA(b)){
         if(isNA(a)) return (!options || options.na == "last") ? 1 : -1
         if(isNA(b)) return (!options || options.na == "last") ? -1 : 1
     }
     if(!isPrimitive(a) || !isPrimitive(b)){
-        throw new Error("TypeError: defaultsort comparison is only supported for primitive types")
+        throw new Error(`TypeError: defaultsort comparison is only supported for primitive types (${a} & ${b})`)
     }
     return defaultsort(b, a) == 1 ? -1 : 1
 }
