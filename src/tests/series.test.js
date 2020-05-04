@@ -478,6 +478,16 @@ describe("ranking", () => {
 
 })
 
+describe("iteration protocol", () => {
+    let s = new Series([1,2,3,4,5])
+
+    test("is iterable", () => {
+        expect(utils.isIterable(s)).toBe(true)
+    })
+    test("spread operator", () => {
+        expect([...s]).toEqual([1,2,3,4,5])
+    })
+})
 
 
 
