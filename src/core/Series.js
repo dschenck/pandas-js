@@ -974,6 +974,40 @@ export class Series{
         return new Series(values, {index: this.index, name:this.name})
     }
 
+    /**
+     * Group values by 
+     * @param {*} options 
+     * @returns grouper
+     */
+    groupby(options){
+        const grouper = Grouper(this)
+
+        if(!options || options.by === undefined){
+            throw new Error("Groupby called incorrectly")
+        }
+        if(typeof options.by === "function"){
+            for(let i = 0; i < this.length; i++){
+                grouper.add(options.by(this._values[i], i), this.index.at(i), this._values[i])
+            }
+        }
+        else if(options.by instanceof Series){
+            if(options.by.length !== this.length){
+                throw new Error("Length mismatch")
+            }
+            for(let i = 0; i < this.length; i++){
+                grouper.add(options.by.iloc(i), this.index.at(i), this._values[i])
+            }
+        }
+        else if(Array.isArray(options.by)){
+            if(options.by.length !== this.length){
+                throw new Error("Length mismatch")
+            }
+            for(let i = 0; i < this.length; i++){
+                grouper.add(options.by[i], this.index.at(i), this._values[i])
+            }
+        }
+        return grouper
+    }
 
     /**
      * Drop rows where label in labels
