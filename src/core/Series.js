@@ -982,32 +982,28 @@ export class Series{
      * @param {*} options 
      * @returns grouper
      */
-    groupby(options){
-        const grouper = Grouper(this)
+    groupby(groups){
+        const grouper = new Grouper(this)
 
-        if(!options || options.by === undefined){
+        if(!groups){
             throw new Error("Groupby called incorrectly")
         }
-        if(typeof options.by === "function"){
+        if(typeof groups === "function"){
             for(let i = 0; i < this.length; i++){
-                grouper.add(options.by(this._values[i], i), this.index.at(i), this._values[i])
+                grouper.add(groups(this._values[i], i), this.index.at(i), this._values[i])
             }
         }
-        else if(options.by instanceof Series){
-            if(options.by.length !== this.length){
+        else if(utils.isIterable(groups) && !utils.isString(groups)){
+            groups = [...groups]
+            if(groups.length !== this.length){
                 throw new Error("Length mismatch")
             }
             for(let i = 0; i < this.length; i++){
-                grouper.add(options.by.iloc(i), this.index.at(i), this._values[i])
+                grouper.add(options[i], this.index.at(i), this._values[i])
             }
         }
-        else if(Array.isArray(options.by)){
-            if(options.by.length !== this.length){
-                throw new Error("Length mismatch")
-            }
-            for(let i = 0; i < this.length; i++){
-                grouper.add(options.by[i], this.index.at(i), this._values[i])
-            }
+        else { 
+            throw new Error("Unexpected grouper")
         }
         return grouper
     }

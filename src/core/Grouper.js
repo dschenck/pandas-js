@@ -1,16 +1,22 @@
+import { Index }  from './Index'
+import { Series } from './Series'
+
 export class Grouper{
     constructor(underlying){
         this.underlying = underlying
         this.groups     = new Map()
     }
+    get index(){
+        return new Index(this.groups.keys())
+    }
     add(group, index, value){
-        if(!this.groups.has(group)) this.groups[group] = [[],[]]
-        this.groups[group][0].push(index)
-        this.groups[group][1].push(value)
+        if(!this.groups.has(group)) this.groups.set(group, [[],[]])
+        this.groups.get(group)[0].push(index)
+        this.groups.get(group)[1].push(value)
         return
     }
     apply(callback, options){
-        const values = this.groups.keys().map(key => {
+        const values = [...this.groups.keys()].map(key => {
             if(options && options.raw){
                 return callback(this.groups.get(key)[1])
             }
