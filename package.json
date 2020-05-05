@@ -1,5 +1,5 @@
 {
-  "name": "pandasjs",
+  "name": "@davidschenck/pandasjs",
   "version": "0.0.1",
   "description": "Pandas for javascipt",
   "main": "src/index.js",
@@ -12,7 +12,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "immutable": "^4.0.0-rc.12"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
