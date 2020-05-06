@@ -369,7 +369,7 @@ export class Series{
      * Index is assumed to be dates as timestamps
      */
     cagr(){
-        return Math.pow(this.last()/this.first(), 365.25 * 1000 * 3600 * 25 / (this.index.at(-1) - this.index.at(0))) - 1
+        return Math.pow(this.last()/this.first(), 365.25 * 1000 * 3600 * 24 / (this.index.at(-1) - this.index.at(0))) - 1
     }
 
     /**
