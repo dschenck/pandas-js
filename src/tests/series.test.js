@@ -205,6 +205,17 @@ describe('descriptive statistics', () => {
         expect(s3.min()).toBe(false)
         expect(s3.max()).toBe(2.5)
     })
+
+    test("variance and standard deviation", () => {
+        let srs = new Series([1,2,3,4,5,6,7,8,9,10])
+
+        expect(srs.var(0)).toEqual(8.25)
+        expect(srs.var(1)).toBeCloseTo(9.17, 2)
+        expect(srs.var()).toEqual(srs.var(1))
+        expect(srs.std(0)).toEqual(Math.sqrt(srs.var(0)))
+        expect(srs.std(1)).toEqual(Math.sqrt(srs.var(1)))
+        expect(srs.std()).toEqual(srs.std(1))
+    })
 })
 
 describe('cumulative operations', () => {

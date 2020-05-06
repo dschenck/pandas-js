@@ -329,6 +329,50 @@ export class Series{
     }
 
     /**
+     * Computes the variance
+     * 
+     *  @param {int} ddof 
+     */
+    var(ddof = 1){
+        const mean = this.mean()
+        return this._values.map(v => {
+            return utils.isNaN(v) ? NaN : Math.pow(v - mean, 2)
+        }).reduce((sum, error) => {
+            return utils.isNaN(error) ? sum : utils.isNaN(sum) ? error : error + sum
+        }, NaN)/(this.count() - ddof)
+    }
+
+    /**
+     * Returns the standard deviation
+     * 
+     * @param {int} ddof 
+     */
+    std(ddof = 1){
+        return Math.sqrt(this.var(ddof))
+    }
+
+    /**
+     * Returns the maximum drawdown 
+     * 
+     * @param {*} field 
+     */
+    mdd(field = "return"){
+        if(field == "return") return this.divide(this.cummax()).min() - 1
+        if(field == "valley") return this.iloc(this.divide(this.cummax()).idxmin())
+        if(field == "valley date") return this.index.at(this._values.indexOf(this.mdd("valley")))
+        if(field == "peak") return this.cummax().iloc(this.divide(this.cummax()).idxmin())
+        if(field == "peak date") return this.index.at(this._values.indexOf(this.mdd("peak")))
+    }
+
+    /**
+     * Returns the compounded annual growth rate between the first and the last value
+     * Index is assumed to be dates as timestamps
+     */
+    cagr(){
+        return Math.pow(this.last()/this.first(), 365.25 * 1000 * 3600 * 25 / (this.index.at(-1) - this.index.at(0))) - 1
+    }
+
+    /**
      * Computes the numeric maximum
      */
     max(){
