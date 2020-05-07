@@ -154,14 +154,14 @@ export class Series{
      * @param {number} [end=undefined] the index (0-based) of the end of the slice, excluded 
      * @returns {Series}
      */
-    slice(start, stop){
+    islice(start, stop){
         if(start > this.length || (this.length + start) < 0){
             throw new Error('Out of bounds error')
         }
         if(stop && (stop > this.length || (this.length + stop) < 0)){
             throw new Error('Out of bounds error')
         }
-        return new Series(this._values.slice(start, stop), {name:this.name, index:this.index.slice(start, stop)})
+        return new Series(this._values.slice(start, stop), {name:this.name, index:this.index.islice(start, stop)})
     }
 
     /**

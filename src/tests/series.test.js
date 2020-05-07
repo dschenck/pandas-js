@@ -81,16 +81,16 @@ describe('Indexing by position', () => {
 describe('Slicing', () => {
     test('simple slicing', () => {
         let s = new Series([0,1,2,3,4,5,6,7])
-        expect(s.slice(0,1).values).toEqual([0])
-        expect(s.slice(-1,).values).toEqual([7])
-        expect(s.slice(0,-4).values).toEqual([0,1,2,3])
-        expect(s.slice(-4,-1).values).toEqual([4,5,6])
-        expect(s.slice(0, s.length).length).toBe(s.length)
+        expect(s.islice(0,1).values).toEqual([0])
+        expect(s.islice(-1,).values).toEqual([7])
+        expect(s.islice(0,-4).values).toEqual([0,1,2,3])
+        expect(s.islice(-4,-1).values).toEqual([4,5,6])
+        expect(s.islice(0, s.length).length).toBe(s.length)
     })
     test('out of bounds error', () => {
         let s = new Series([0,1,2,3,4,5,6,7])
-        expect(() => s.slice(9)).toThrow(Error)
-        expect(() => s.slice(-9)).toThrow(Error)
+        expect(() => s.islice(9)).toThrow(Error)
+        expect(() => s.islice(-9)).toThrow(Error)
     })
 })
 

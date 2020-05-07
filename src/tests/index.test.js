@@ -48,11 +48,11 @@ describe("indexing", () => {
 
 describe("slicing", () => {
     it("should return an axis", () => {
-        expect(idx1.slice(0,4)).toBeInstanceOf(Index)
-        expect(idx1.slice(0,4).at(0)).toBe("A")
+        expect(idx1.islice(0,4)).toBeInstanceOf(Index)
+        expect(idx1.islice(0,4).at(0)).toBe("A")
     })
     it("should throw an error", () => {
-        expect(() => idx0.slice(0,1)).toThrow(Error)
+        expect(() => idx0.islice(0,1)).toThrow(Error)
     })
 })
 

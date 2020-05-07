@@ -121,7 +121,7 @@ class Index{
      * @param {integer} begin 
      * @param {integer} end 
      */
-    slice(begin, end){
+    islice(begin, end){
         if(begin > this.length || (this.length + begin) < 0){
             throw new Error('Out of bounds error')
         }
