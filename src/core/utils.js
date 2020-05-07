@@ -254,3 +254,16 @@ export function isIterable(obj){
     if (obj == null) return false
     return typeof obj[Symbol.iterator] === 'function';
 }
+
+/**
+ * 
+ */
+export function isSortable(a, b){
+    if((isNumeric(a) && isNumeric(b)) || (isString(a) && isString(b))){
+        return true
+    }
+    if(isNA(a) || isNA(b)){
+        return true
+    }
+    return false
+}
