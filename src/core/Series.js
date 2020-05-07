@@ -147,6 +147,18 @@ export class Series{
         return this._values[indices >= 0 ? indices : this.length + indices]
     }
     /**
+     * Slices by label
+     * Exclusive of upper bound
+     * 
+     * @param {*} start 
+     * @param {*} stop 
+     */
+    slice(start, stop){
+        const index = this.index.slice(start, stop)
+        return new Series(index._values.map(idx => this.loc(idx), {index:index, name:this.name}))
+    }
+
+    /**
      * Slices the series by position (index)
      * The upper bound is excluded
      * 

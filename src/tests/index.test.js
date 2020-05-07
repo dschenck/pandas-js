@@ -54,6 +54,21 @@ describe("slicing", () => {
     it("should throw an error", () => {
         expect(() => idx0.islice(0,1)).toThrow(Error)
     })
+
+    test("slicing by label", () => {
+        const idx = new Index([1,2,3,4,5,6,7,8,9])
+
+        expect(idx.slice(3,6).values).toEqual([3,4,5])
+        expect(idx.slice(3,6).length).toEqual(3)
+        expect(idx.slice(null,4).length).toEqual(3)
+        expect(idx.slice(4,null).length).toEqual(6)
+        expect(idx.slice(4).length).toEqual(6)
+
+        const abc = new Index(["A","B","C","D","E","F"])
+
+        expect(abc.slice("B","E").length).toEqual(3)
+        expect(abc.slice("B","E").values).toEqual(["B","C","D"])
+    })
 })
 
 test('min', () => {

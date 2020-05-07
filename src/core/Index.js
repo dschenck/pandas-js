@@ -115,20 +115,37 @@ class Index{
         }
         return this.at(indices)
     }
+
     /**
-     * Returns a new axis within the bounds
+     * Slices an index by value
+     * Exclusive of upper bound
      * 
-     * @param {integer} begin 
+     * @param {*} start 
+     * @param {*} stop 
+     */
+    slice(start, stop){
+        start = utils.isDefined(start) ? start : this.at(0) 
+        if(utils.isDefined(stop)){
+            return this.filter(v => (v >= start) && (v < stop))
+        }
+        return this.filter(v => v >= start)
+    }
+
+    /**
+     * Slices an index by position 
+     * Exclusive of upper bound
+     * 
+     * @param {integer} start 
      * @param {integer} end 
      */
-    islice(begin, end){
-        if(begin > this.length || (this.length + begin) < 0){
+    islice(start, stop){
+        if(start > this.length || (this.length + start) < 0){
             throw new Error('Out of bounds error')
         }
-        if(end && (end > this.length || (this.length + end) < 0)){
+        if(stop && (stop > this.length || (this.length + stop) < 0)){
             throw new Error('Out of bounds error')
         }
-        return new Index(this._values.slice(begin, end), {name:this.name})
+        return new Index(this._values.slice(start, stop), {name:this.name})
     }
     /**
      * Add a key to the index
