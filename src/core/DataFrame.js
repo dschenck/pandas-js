@@ -189,4 +189,11 @@ export class DataFrame{
                 {index:this.index, name:this.columns.at(options.column)})
         }
     }
+
+    /**
+     * Returns the transpose of the dataframe
+     */
+    transpose(){
+        return new DataFrame(utils.transpose(this._values), {index:this.columns, columns:this.index})
+    }
 }
