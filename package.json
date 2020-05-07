@@ -1,6 +1,6 @@
 {
   "name": "@davidschenck/pandasjs",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Pandas for javascipt",
   "main": "src/index.js",
   "scripts": {
