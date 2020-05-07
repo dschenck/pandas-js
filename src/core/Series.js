@@ -155,7 +155,7 @@ export class Series{
      */
     slice(start, stop){
         const index = this.index.slice(start, stop)
-        return new Series(index._values.map(idx => this.loc(idx), {index:index, name:this.name}))
+        return new Series(index._values.map(idx => this.loc(idx)), {index:index, name:this.name})
     }
 
     /**
