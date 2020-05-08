@@ -500,6 +500,20 @@ describe("iteration protocol", () => {
     })
 })
 
+describe("quantile", () => {
+    let s = new Series([1,2,3,4,5,6,7,8,9])
+
+    test("0 quantile", () => {
+        expect(s.quantile(0)).toEqual(1)
+    })
+    test("1 quantile", () => {
+        expect(s.quantile(1)).toEqual(9)
+    })
+    test("median", () => {
+        expect(s.quantile(0.5)).toEqual(5)
+    })
+})
+
 
 
 

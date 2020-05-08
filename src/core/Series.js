@@ -1034,6 +1034,24 @@ export class Series{
     }
 
     /**
+     * Returns the quantile value
+     * 
+     * @param {float} p 
+     */
+    quantile(p){
+        const values = [...this._values].filter(v => !utils.isNaN(v)).sort(utils.defaultsort)
+        if(values.length == 0) return NaN
+        return values[Math.max(0, Math.round(p * values.length) - 1)]
+    }
+
+    /**
+     * Returns the median of the values
+     */
+    median(){
+        return this.quantile(0.5)
+    }
+
+    /**
      * Group values by 
      * @param {*} options 
      * @returns grouper
