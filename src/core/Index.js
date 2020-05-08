@@ -298,6 +298,19 @@ class Index{
     union(other){
         return new Index(Array.from(new Set(this._values.concat([...other]))))
     }
+
+    /**
+     * Returns a new index combining the intersection of this and another iterble
+     * @param {*} other 
+     */
+    intersection(other){
+        const [ idx1, idx2 ] = [ new Set(this._values), new Set(other) ]
+        const intersection = new Set()
+        for(let idx of idx1){
+            if(idx2.has(idx)) intersection.add(idx)
+        }
+        return new Index(Array.from(intersection))
+    }
 }
 
 export { Index }

@@ -106,16 +106,31 @@ test("iterator protocol", () => {
     expect([...idx1][0]).toBe("A")
 })
 
-test("union of two axes", () => {
-    const i1 = new Index([1,2,3,4,5,6,7])
-    const i2 = new Index([6,7,8,9,10])
-    expect(i1.union(i2).values).toEqual([1,2,3,4,5,6,7,8,9,10])
+describe("union", () => {
+    test("union of two axes", () => {
+        const i1 = new Index([1,2,3,4,5,6,7])
+        const i2 = new Index([6,7,8,9,10])
+        expect(i1.union(i2).values).toEqual([1,2,3,4,5,6,7,8,9,10])
+    })
+    
+    test("union of one axis and one list",() => {
+        const i1 = new Index([1,2,3,4,5])
+        const i2 = [4,5,6,7,8,9,10]
+        expect(i1.union(i2).values).toEqual([1,2,3,4,5,6,7,8,9,10])
+    })
 })
 
-test("union of one axis and one list",() => {
-    const i1 = new Index([1,2,3,4,5])
-    const i2 = [4,5,6,7,8,9,10]
-    expect(i1.union(i2).values).toEqual([1,2,3,4,5,6,7,8,9,10])
+describe("intersection", () => {
+    test("intersection of two axes", () =>{
+        const i1 = new Index([1,2,3,4,5,6,7])
+        const i2 = new Index([6,7,8,9,10])
+        expect(i1.intersection(i2).values).toEqual([6,7])
+    })
+    test("intersection of one axis and one list",() => {
+        const i1 = new Index([1,2,3,4,5])
+        const i2 = [4,5,6,7,8,9,10]
+        expect(i1.intersection(i2).values).toEqual([4,5])
+    })
 })
 
 test("sorting", () => {
