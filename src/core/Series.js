@@ -1,6 +1,7 @@
 import { Index }   from './Index'
 import { Grouper } from './Grouper'
 import * as utils  from './utils'
+import * as stats  from './stats'
 
 export class Series{
     constructor(data, options){
@@ -362,6 +363,43 @@ export class Series{
     std(ddof = 1){
         return Math.sqrt(this.var(ddof))
     }
+
+    /**
+     * Returns the correlation of this and other 
+     * If other is a Series, aligns the indices first
+     */
+    covar(other, options){
+        if(other instanceof Series){
+            if(!options || !options["ignore axis"]){
+                const index = this.index.intersection(other.index)
+                if(index.length == 0) return NaN
+                return stats.covar(this.reindex(index)._values, other.reindex(index)._values)
+            }
+        }
+        if(other.length != this.length){
+            throw new Error("Length mismatch")
+        }
+        return stats.covar(this._values, [...other])
+    }
+
+    /**
+     * Returns the correlation of this and other 
+     * If other is a Series, aligns the indices first
+     */
+    corr(other, options){
+        if(other instanceof Series){
+            if(!options || !options["ignore axis"]){
+                const index = this.index.intersection(other.index)
+                if(index.length == 0) return NaN
+                return stats.corr(this.reindex(index)._values, other.reindex(index)._values)
+            }
+        }
+        if(other.length != this.length){
+            throw new Error("Length mismatch")
+        }
+        return stats.corr(this._values, [...other])
+    }
+
 
     /**
      * Returns the maximum drawdown 
