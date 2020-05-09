@@ -514,6 +514,21 @@ describe("quantile", () => {
     })
 })
 
+describe("reindex", () => {
+    let s = new Series([1,2,3,4,5,6,7,8,9])
+
+    test("reindex with other index", () => {
+        expect(s.reindex(new Index([4,8,12]))).toBeInstanceOf(Series)
+        expect(s.reindex(new Index([4,8,12])).length).toEqual(3)
+        expect(s.reindex(new Index([4,8,12])).values).toEqual([5,9,NaN])
+    })
+    test("reindex with array", () => {
+        expect(s.reindex([4,8,12])).toBeInstanceOf(Series)
+        expect(s.reindex([4,8,12]).length).toEqual(3)
+        expect(s.reindex([4,8,12]).values).toEqual([5,9,NaN])
+    })
+})
+
 
 
 

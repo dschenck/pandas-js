@@ -1117,4 +1117,13 @@ export class Series{
             return value.toFixed(n)
         })
     }
+
+    /**
+     * Reindex the series
+     * 
+     * @param {*} index 
+     */
+    reindex(index){
+        return new Series([...index].map(idx => this.index.has(idx) ? this.loc(idx) : NaN), {index:index, name:this.name})
+    }
 }
