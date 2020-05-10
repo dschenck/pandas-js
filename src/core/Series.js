@@ -1,3 +1,5 @@
+import moment from 'moment'
+
 import { Index }   from './Index'
 import { Grouper } from './Grouper'
 import * as utils  from './utils'
@@ -1158,5 +1160,26 @@ export class Series{
      */
     reindex(index){
         return new Series([...index].map(idx => this.index.has(idx) ? this.loc(idx) : NaN), {index:index, name:this.name})
+    }
+
+    /**
+     * Resample to a given frequency
+     */
+    resample(frequency, options){
+        const groups = this.index._values.map(date => {
+            switch(frequency){
+                case "D":
+                    return moment(date).endOf("day").valueOf()
+                case "W": 
+                    return moment(date).endOf("week").startOf("day").valueOf()
+                case "M":
+                    return moment(date).endOf("month").startOf("day").valueOf()
+                case "Q":
+                    return moment(date).endOf("quarter").startOf("day").valueOf()
+                case "Y":
+                    return moment(date).endOf("year").startOf("day").valueOf()
+            }
+        })
+        return this.groupby(groups)
     }
 }
