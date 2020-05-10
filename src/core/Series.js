@@ -508,13 +508,8 @@ export class Series{
      */
     filter(callback, options){
         const mask = this._values.map((value, i) => callback(value, i))
-
-        if(options && options.inplace){
-            this._values = this._values.filter((v, i) => mask[i])
-            return
-        }
-
-        return new Series(this._values.filter((v, i) => mask[i]), {name:this.name, index:this.index.filter((v, i) => mask[i])})
+        return new Series(this._values.filter((v, i) => mask[i]), 
+            {name:this.name, index:this.index.filter((v, i) => mask[i])})
     }
 
     /**
