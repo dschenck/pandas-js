@@ -196,4 +196,26 @@ export class DataFrame{
     transpose(){
         return new DataFrame(utils.transpose(this._values), {index:this.columns, columns:this.index})
     }
+
+    /**
+     * Maps each value of the dataframe
+     * 
+     * @param {*} callback 
+     */
+    map(callback){
+        return new DataFrame(this._values.map(row => row.map(callback)), 
+            {index:this.index, columns:this.columns})
+    }
+
+    /**
+     * Reduces values in the given axis to a point
+     */
+    reduce(callback, initvalue, options){
+        if(options && options.axis == 1){
+            return new Series(this._values.map(row => row.reduce(callback, initvalue)), 
+                {index:this.index, name:options.name})
+        }
+        return new Series(utils.transpose(this._values).map(row => row.reduce(callback, initvalue)), 
+            {index:this.columns, name:options ? options.name : undefined})
+    }
 }
