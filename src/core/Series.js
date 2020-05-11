@@ -1108,7 +1108,7 @@ export class Series{
                 throw new Error("Length mismatch")
             }
             for(let i = 0; i < this.length; i++){
-                grouper.add(options[i], this.index.at(i), this._values[i])
+                grouper.add(groups[i], this.index.at(i), this._values[i])
             }
         }
         else { 
