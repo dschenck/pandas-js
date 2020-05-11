@@ -74,7 +74,7 @@ export function covar(X, Y, options){
     if(errors.length == 0) return NaN
 
     const ddof = options && options.ddof ? options.ddof : 1 
-    return Math.sum(errors)/(errors.length - ddof)
+    return sum(errors)/(errors.length - ddof)
 }
 
 /**
@@ -96,7 +96,7 @@ export function corr(X, Y, options){
     if(X.length == 0) return NaN
 
     //mean values (fast)
-    const [ mx, my ] = [ Math.sum(X)/X.length, Math.sum(Y)/Y.length ]
+    const [ mx, my ] = [ sum(X)/X.length, sum(Y)/Y.length ]
 
     //variance (fast)
     const vx = X.reduce((prev, curr) => prev + Math.pow(curr - mx, 2), 0)
