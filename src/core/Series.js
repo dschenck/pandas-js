@@ -573,8 +573,8 @@ export class Series{
     /**
      * Returns the cumulative compound
      */
-    cumcompound(){
-        return this.accumulate((prev, curr) => utils.isNaN(curr) ? prev : utils.isNaN(prev) ? curr : (1 + prev) * (1 + curr) - 1)
+    cumcompound(initialvalue = 0){
+        return this.accumulate((prev, curr) => utils.isNaN(curr) ? prev : utils.isNaN(prev) ? curr : (1 + prev) * (1 + curr) - 1, initialvalue)
     }
 
     /**
