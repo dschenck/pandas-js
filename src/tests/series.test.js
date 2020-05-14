@@ -529,6 +529,17 @@ describe("reindex", () => {
     })
 })
 
+describe("pivot table", () =>  {
+    let s = new Series([1,2,3,4,5,6,7,8,9])
+
+    test("simple pivot table", () => {
+        const df = s.pivot({
+                index:[1,1,1,1,1,2,2,2,2],
+                columns:["A","B","A","B","A","B","A","B","A"],
+                aggregate:srs => srs.sum()})
+        expect(df.shape).toEqual([2,2])
+    })
+})
 
 
 

@@ -1,9 +1,10 @@
 import moment from 'moment'
 
-import { Index }   from './Index'
-import { Grouper } from './Grouper'
-import * as utils  from './utils'
-import * as stats  from './stats'
+import { Index }     from './Index'
+import { Grouper }   from './Grouper'
+import { DataFrame } from './DataFrame'
+import * as utils    from './utils'
+import * as stats    from './stats'
 
 export class Series{
     constructor(data, options){
@@ -1181,5 +1182,71 @@ export class Series{
             }
         })
         return this.groupby(groups)
+    }
+
+    /**
+     * Create a pivot table from the series
+     * 
+     * @param {*} options 
+     */
+    pivot(options){
+        const [ pivot, index, columns ] = [ new Map(), [], [] ]
+
+        //force index and columns to lists
+        if(typeof options.index === "function"){
+            options.index = this._values.map(options.index)
+        }
+        else{
+            options.index = [...options.index]
+        }
+
+        if(typeof options.columns === "function"){
+            options.columns = this._values.map(options.columns)
+        }
+        else{
+            options.columns = [...options.columns]
+        }
+
+        //group values in two-level pivot table
+        for(let i = 0; i < this.length; i++){
+            if(!pivot.has(options.index[i])){
+                pivot.set(options.index[i], new Map())
+                index.push(options.index[i])
+            }
+            if(!pivot.get(options.index[i]).has(options.columns[i])){
+                pivot.get(options.index[i]).set(options.columns[i], {values:[],index:[]})
+                columns.push(options.columns[i])
+            }
+            pivot.get(options.index[i]).get(options.columns[i]).values.push(this._values[i])
+            pivot.get(options.index[i]).get(options.columns[i]).index.push(this.index.at(i))
+        }
+        
+        //create output dataframe
+        const df = new DataFrame(undefined, {index:Array.from(new Set(index)), columns:Array.from(new Set(columns))})
+
+        //hydrate the dataframe
+        for(let r = 0; r < df.index.length; r++){
+            for(let c = 0; c < df.columns.length; c++){
+                if(pivot.has(df.index.at(r)) && pivot.get(df.index.at(r)).has(df.columns.at(c))){
+                    if(options.aggregate){
+                        if(options.raw){
+                            df._values[r][c] = options.aggregate(pivot.get(df.index.at(r)).get(df.columns.at(c)).values)
+                        }  
+                        else{
+                            df._values[r][c] = options.aggregate(new Series(pivot.get(df.index.at(r)).get(df.columns.at(c)).values, {index:pivot.get(df.index.at(r)).get(df.columns.at(c)).index}))
+                        }  
+                    }
+                    else{
+                        if(pivot.get(df.index.at(r)).get(df.columns.at(c)).values.length > 1){
+                            throw new Error("Multiple values, you need to provide an aggregator")
+                        }
+                        df._values[r][c] = pivot.get(df.index.at(r)).get(df.columns.at(c)).values[0]
+                    }
+                }
+            }
+        }
+
+        //return the pivot table
+        return df
     }
 }
