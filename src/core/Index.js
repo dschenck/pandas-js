@@ -1,3 +1,5 @@
+import moment from 'moment'
+
 import * as utils from './utils'
 
 class Index{
@@ -100,7 +102,7 @@ class Index{
             throw new Error('Index should be an integer')
         }
         if(index >= this.length || (this.length + index) < 0){
-            throw new Error('Out of bounds error')
+            throw new Error(`Out of bounds error: index is ${this.length} long, ${index} given`)
         }
         return index < 0 ? this._values[this.length + index] : this._values[index] 
     }
@@ -310,6 +312,31 @@ class Index{
             if(idx2.has(idx)) intersection.add(idx)
         }
         return new Index(Array.from(intersection))
+    }
+
+    /**
+     * Returns a series with the year
+     */
+    year(){
+        return new Series(this._values.map(v => moment(v).year()), {index:this, name:this.name})
+    }
+    /**
+     * Returns a series with the year
+     */
+    quarter(){
+        return new Series(this._values.map(v => moment(v).quarter()), {index:this, name:this.name})
+    }
+    /**
+     * Returns a series with the year
+     */
+    month(){
+        return new Series(this._values.map(v => moment(v).month()), {index:this, name:this.name})
+    }
+    /**
+     * Returns a series with the year
+     */
+    day(){
+        return new Series(this._values.map(v => moment(v).day()), {index:this, name:this.name})
     }
 }
 
