@@ -32,6 +32,12 @@ test("index should have", () => {
     expect(idx2.has(100)).toBe(false)
 })
 
+test("year", () => {
+    const idx = new Index([new Date()])
+
+    expect(idx.year()).toBeInstanceOf(Series)
+})
+
 describe("indexing", () => {
     it("should return values", () => {
         expect(idx1.at(0)).toBe("A")

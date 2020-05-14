@@ -1,5 +1,6 @@
 import moment from 'moment'
 
+import { Series } from './Series'
 import * as utils from './utils'
 
 class Index{
