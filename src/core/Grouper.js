@@ -74,7 +74,7 @@ export class Grouper extends BaseGrouper{
             }
             return callback(new Series(this.groups.get(key)[1], {index:this.groups.get(key)[0], name:key}))
         })
-        return new Series(values, {index:this.groups.keys(), name:this.underlying.name})
+        return new Series(values, {index:this.groups.keys()})
     }
 }
 

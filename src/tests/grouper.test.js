@@ -10,10 +10,6 @@ describe("instanciation", () =>{
         expect(grouper).toBeInstanceOf(Grouper)
     })
 
-    test("grouper underlying", () => {
-        expect(grouper.underlying).toBeInstanceOf(Series)
-    })
-
     test("grouper groups size", () => {
         expect(grouper.groups.size).toEqual(2)
     })
