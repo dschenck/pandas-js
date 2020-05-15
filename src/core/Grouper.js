@@ -53,7 +53,13 @@ export class Grouper extends BaseGrouper{
         this.groups = new Map()
     }
     get index(){
-        return new Index(this.groups.keys())
+        const index = new Index(this.groups.keys())
+        try{
+            return index.sort()
+        }
+        catch(e){
+            return index
+        }
     }
     add(group, index, value){
         if(!this.groups.has(group)) this.groups.set(group, [[],[]])
@@ -88,7 +94,13 @@ export class Pivot extends BaseGrouper{
         this.mapping.get(index).get(column).values.push(value)
     }
     get index(){
-        return Array.from(new Set(this.mapping.keys()))
+        const index = new Index([...new Set(this.mapping.keys())])
+        try{
+            return index.sort()
+        }
+        catch(err){
+            return index
+        }
     }
     get columns(){
         const columns = new Set()
@@ -97,11 +109,17 @@ export class Pivot extends BaseGrouper{
                 columns.add(col)
             }
         }
-        return Array.from(columns)
+        const index = new Index([...columns])
+        try{
+            return index.sort()
+        }
+        catch(err){
+            return index
+        }
     }
     apply(callback, options){
-        const values = this.index.map((index, i) => {
-            return this.columns.map((column, c) => {
+        const values = this.index.values.map((index, i) => {
+            return this.columns.values.map((column, c) => {
                 if(!this.mapping.has(index) || !this.mapping.get(index).has(column)){
                     return NaN
                 }
