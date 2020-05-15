@@ -536,7 +536,7 @@ describe("pivot table", () =>  {
         const df = s.pivot({
                 index:[1,1,1,1,1,2,2,2,2],
                 columns:["A","B","A","B","A","B","A","B","A"],
-                aggregate:srs => srs.sum()})
+            }).last()
         expect(df.shape).toEqual([2,2])
     })
 })
