@@ -218,4 +218,12 @@ export class DataFrame{
         return new Series(utils.transpose(this._values).map(row => row.reduce(callback, initvalue)), 
             {index:this.columns, name:options ? options.name : undefined})
     }
+
+    /**
+     * Applies a callback function to all cells of the table
+     */
+    applymap(callback){
+        return new DataFrame(this._values.map(row => row.map(callback)), 
+            {index:this.index, columns:this.columns})
+    }
 }
