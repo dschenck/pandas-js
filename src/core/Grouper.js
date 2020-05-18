@@ -1,6 +1,7 @@
 import { Index }     from './Index'
 import { Series }    from './Series'
 import { DataFrame } from './DataFrame'
+import * as utils    from './utils'
 
 class BaseGrouper{
     constructor(options){
@@ -96,7 +97,7 @@ export class Pivot extends BaseGrouper{
     get index(){
         const index = new Index([...new Set(this.mapping.keys())])
         try{
-            return index.sort()
+            return index.sort(utils.defaultsort)
         }
         catch(err){
             return index
@@ -111,7 +112,7 @@ export class Pivot extends BaseGrouper{
         }
         const index = new Index([...columns])
         try{
-            return index.sort()
+            return index.sort(utils.defaultsort)
         }
         catch(err){
             return index
