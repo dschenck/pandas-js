@@ -226,4 +226,13 @@ export class DataFrame{
         return new DataFrame(this._values.map(row => row.map(callback)), 
             {index:this.index, columns:this.columns})
     }
+
+    /**
+     * 
+     */
+    iterrows(){
+        return this._values.map((row, r) => {
+            return new Series(row, {name:this.index.at(r), index:this.columns})
+        })
+    }
 }
