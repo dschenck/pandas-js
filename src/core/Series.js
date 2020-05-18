@@ -1,10 +1,10 @@
 import moment from 'moment'
 
-import { Index }          from './Index'
-import { Grouper, Pivot } from './Grouper'
-import { DataFrame }      from './DataFrame'
-import * as utils         from './utils'
-import * as stats         from './stats'
+import { Index }     from './Index'
+import { Grouper, Pivot, Rolling } from './Grouper'
+import { DataFrame } from './DataFrame'
+import * as utils    from './utils'
+import * as stats    from './stats'
 
 export class Series{
     constructor(data, options){
@@ -1212,5 +1212,13 @@ export class Series{
         }
 
         return grouper
+    }
+
+    /**
+     * Apply a rolling function to the series
+     * @param {*} options 
+     */
+    rolling(options){
+        return new Rolling(this, options)
     }
 }

@@ -2,6 +2,7 @@ import { Index }     from './Index'
 import { Series }    from './Series'
 import { DataFrame } from './DataFrame'
 import * as utils    from './utils'
+import * as stats    from './stats'
 
 class BaseGrouper{
     constructor(options){
@@ -132,5 +133,35 @@ export class Pivot extends BaseGrouper{
             })
         })
         return new DataFrame(values, {index:this.index, columns:this.columns})
+    }
+}
+
+export class Rolling extends BaseGrouper{
+    constructor(underlying, options){
+        super(options)
+        this.underlying = underlying
+    }
+    apply(callback, options){
+        const values = []
+        for(let i = 0; i < this.underlying.length; i++){
+            if(i < this.options.window - 1){
+                values.push(NaN)
+            }
+            else{
+                if(options && options.raw){
+                    values.push(callback(this.underlying._values.slice(i - this.options.window + 1, i + 1)))
+                }
+                else{
+                    values.push(callback(this.underlying.islice(i - this.options.window + 1, i + 1)))
+                }
+            }
+        }
+        return new Series(values, {index:this.underlying.index})
+    }
+    sum(){
+        return this.apply(values => stats.sum(values), {raw:true})
+    }
+    std(){
+        return this.apply(values => stats.std(values), {raw:true})
     }
 }

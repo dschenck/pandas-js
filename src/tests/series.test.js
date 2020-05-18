@@ -541,6 +541,15 @@ describe("pivot table", () =>  {
     })
 })
 
+describe("rolling", () => {
+    let s = new Series([1,2,3,4,5,6,7,8,9])
+
+    test("simple rolling sum", () => {
+        const r = s.rolling({window:2}).sum()
+        expect(r).toBeInstanceOf(Series)
+        expect(r.values).toEqual([NaN,3,5,7,9,11,13,15,17])
+    })
+})
 
 
 
