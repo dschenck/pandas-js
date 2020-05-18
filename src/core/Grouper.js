@@ -156,7 +156,7 @@ export class Rolling extends BaseGrouper{
                 }
             }
         }
-        return new Series(values, {index:this.underlying.index})
+        return new Series(values, {index:this.underlying.index, name:this.underlying.name})
     }
     sum(){
         return this.apply(values => stats.sum(values), {raw:true})
