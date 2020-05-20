@@ -1065,7 +1065,7 @@ export class Series{
     rank(options){
         const sorted = this.sort(options)
         const count  = (options && options.normalized) ? this.count() : 1
-        const values = this.index.map(idx => utils.isNA(this.loc(idx)) ? NaN : (sorted.index.indexOf(idx) + 1) / count)
+        const values = this.index._values.map(idx => utils.isNA(this.loc(idx)) ? NaN : (sorted.index.indexOf(idx) + 1) / count)
         return new Series(values, {index: this.index, name:this.name})
     }
 

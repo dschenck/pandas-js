@@ -472,6 +472,14 @@ describe("sorting", () => {
         expect(s1.sort({by:"index", ascending:false}).values).toEqual([5,7,3,1])
         expect(s1.sort({by:"index", ascending:false}).index.values).toEqual([4,3,2,1])
     })
+
+    let s2 = new Series([1,2,2,NaN,NaN,NaN,4,5,6], {index:[2,4,6,8,10,12,14,16,18]})
+
+    test("multiple NaN", () => {
+        expect(s2.sort().values).toEqual([1,2,2,4,5,6,NaN,NaN,NaN])
+        expect(s2.sort({by:"values"}).values).toEqual([NaN,NaN,NaN,1,2,2,4,5,6])
+        expect(s2.sort({by:"values", na:"last"}).values).toEqual([1,2,2,4,5,6,NaN,NaN,NaN])
+    })
 })
 
 describe("ranking", () => {
@@ -485,6 +493,12 @@ describe("ranking", () => {
     })
     test("normalized ranking", () => {
         expect(s1.rank({normalized:true}).values).toEqual([1/4,3/4,1,2/4])
+    })
+
+    let s2 = new Series([1,2,2,NaN,NaN,NaN,4,5,6], {index:[2,4,6,8,10,12,14,16,18]})
+
+    test("multiple NaN", () => {
+        expect(s2.rank()).toBeInstanceOf(Series)
     })
 
 })
