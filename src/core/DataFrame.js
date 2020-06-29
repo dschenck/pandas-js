@@ -2,6 +2,7 @@ import { Index }   from './Index'
 import { Grouper } from './Grouper'
 import { Series }  from './Series'
 import * as utils  from './utils'
+import * as stats  from './stats'
 
 export class DataFrame{
     constructor(data, options){
@@ -212,11 +213,35 @@ export class DataFrame{
      */
     reduce(callback, initvalue, options){
         if(options && options.axis == 1){
-            return new Series(this._values.map(row => row.reduce(callback, initvalue)), 
-                {index:this.index, name:options.name})
+            return new Series(this._values.map((row, r) => {
+                if(options && options.raw){
+                    return row.reduce(callback, initvalue)
+                }
+                return (new Series(row, {index:this.columns, name:this.index.at(r)})).reduce(callback, initvalue)
+            }),{index:this.index, name:options.name})
         }
-        return new Series(utils.transpose(this._values).map(row => row.reduce(callback, initvalue)), 
-            {index:this.columns, name:options ? options.name : undefined})
+        return this.transpose().reduce(callback, initvalue, {...options, axis:1})
+    }
+    /**
+     * Returns the smallest value across an axis
+     * @param {*} options 
+     */
+    min(options){
+        return this.reduce(values => stats.min(values), NaN, {...options, raw:true})
+    }
+    /**
+     * Returns the smallest value across an axis
+     * @param {*} options 
+     */
+    max(options){
+        return this.reduce(values => stats.max(values), NaN, {...options, raw:true})
+    }
+    /**
+     * Returns the smallest value across an axis
+     * @param {*} options 
+     */
+    mean(options){
+        return this.reduce(values => stats.mean(values), NaN, {...options, raw:true})
     }
 
     /**
