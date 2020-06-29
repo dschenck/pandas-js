@@ -336,8 +336,26 @@ class Index{
     /**
      * Returns a series with the year
      */
+    weeknum(){
+        return new Series(this._values.map(v => moment(v).isoWeek()), {index:this, name:this.name})
+    }
+    /**
+     * Returns a series with the weekday (1 for Monday, 7 for Sunday)
+     */
+    weekday(){
+        return new Series(this._values.map(v => moment(v).isoWeekday()), {index:this, name:this.name})
+    }
+    /**
+     * Returns a series with the day of the month
+     */
     day(){
-        return new Series(this._values.map(v => moment(v).day()), {index:this, name:this.name})
+        return new Series(this._values.map(v => moment(v).date()), {index:this, name:this.name})
+    }
+    /**
+     * Returns a series with the day of the month
+     */
+    dayofyear(){
+        return new Series(this._values.map(v => moment(v).dayOfYear()), {index:this, name:this.name})
     }
 }
 
