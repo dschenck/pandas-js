@@ -13,7 +13,9 @@ export {
     corr,
     count,
     covar,
+    max,
     mean,
+    min,
     sum,
     std,
     variance
