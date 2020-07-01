@@ -130,3 +130,12 @@ describe("accessing data via position", () => {
         expect(df1.iloc({rows:[0,2],columns:[0,-2]})).toBeInstanceOf(DataFrame)
     })
 })
+
+describe("reducers", () => {
+    const df1 = new DataFrame([[-1, 0, 1],[-2, 4, 1],[10, -9, 5]], 
+                        {index:["1","2","3"], columns:["A","B","C"]})
+
+    test("min", () => {
+        expect(df1.min({axis:1}).values).toEqual([-1,-2,-9])
+    })
+})

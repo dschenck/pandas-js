@@ -190,14 +190,12 @@ export class DataFrame{
                 {index:this.index, name:this.columns.at(options.column)})
         }
     }
-
     /**
      * Returns the transpose of the dataframe
      */
     transpose(){
         return new DataFrame(utils.transpose(this._values), {index:this.columns, columns:this.index})
     }
-
     /**
      * Maps each value of the dataframe
      * 
@@ -207,49 +205,69 @@ export class DataFrame{
         return new DataFrame(this._values.map(row => row.map(callback)), 
             {index:this.index, columns:this.columns})
     }
-
     /**
-     * Reduces values in the given axis to a point
+     * Returns the absolute value of the numeric types
      */
-    reduce(callback, initvalue, options){
-        if(options && options.axis == 1){
-            return new Series(this._values.map((row, r) => {
-                if(options && options.raw){
-                    return row.reduce(callback, initvalue)
-                }
-                return (new Series(row, {index:this.columns, name:this.index.at(r)})).reduce(callback, initvalue)
-            }),{index:this.index, name:options.name})
-        }
-        return this.transpose().reduce(callback, initvalue, {...options, axis:1})
+    abs(){
+        return this.map(value => utils.isNaN(value) ? NaN : Math.abs(value))
+    }
+    /**
+     * Returns the negative value of the numeric types
+     */
+    neg(){
+        return this.map(value => utils.isNaN(value) ? NaN : -value)
+    }
+    /**
+     * Returns the boolean inverse of each value
+     */
+    not(){
+        return this.map(value => !value)
+    }
+    /**
+     * Returns a boolean series flagging non-numeric types
+     * 
+     * @returns {Series}
+     */
+    isNaN(){
+        return this.map((value) => utils.isNaN(value))
+    }
+    /**
+     * Returns a boolean series flagging missing values
+     * 
+     * @returns {Series}
+     */
+    isNA(){
+        return this.map((value) => utils.isNA(value))
     }
     /**
      * Returns the smallest value across an axis
      * @param {*} options 
      */
     min(options){
-        return this.reduce(values => stats.min(values), NaN, {...options, raw:true})
+        if(options && options.axis == 1){
+            return new Series(this._values.map(row => stats.min(row), {index:this.index, name:"min"}))
+        }
+        return this.transpose().min({axis:1})
     }
     /**
      * Returns the smallest value across an axis
      * @param {*} options 
      */
     max(options){
-        return this.reduce(values => stats.max(values), NaN, {...options, raw:true})
+        if(options && options.axis == 1){
+            return new Series(this._values.map(row => stats.max(row), {index:this.index, name:"max"}))
+        }
+        return this.transpose().max({axis:1})
     }
     /**
      * Returns the smallest value across an axis
      * @param {*} options 
      */
     mean(options){
-        return this.reduce(values => stats.mean(values), NaN, {...options, raw:true})
-    }
-
-    /**
-     * Applies a callback function to all cells of the table
-     */
-    applymap(callback){
-        return new DataFrame(this._values.map(row => row.map(callback)), 
-            {index:this.index, columns:this.columns})
+        if(options && options.axis == 1){
+            return new Series(this._values.map(row => stats.mean(row), {index:this.index, name:"min"}))
+        }
+        return this.transpose().mean({axis:1})
     }
 
     /**
