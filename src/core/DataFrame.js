@@ -265,9 +265,29 @@ export class DataFrame{
      */
     mean(options){
         if(options && options.axis == 1){
-            return new Series(this._values.map(row => stats.mean(row), {index:this.index, name:"min"}))
+            return new Series(this._values.map(row => stats.mean(row), {index:this.index, name:"mean"}))
         }
         return this.transpose().mean({axis:1})
+    }
+    /**
+     * Returns the smallest value across an axis
+     * @param {*} options 
+     */
+    count(options){
+        if(options && options.axis == 1){
+            return new Series(this._values.map(row => stats.count(row), {index:this.index, name:"count"}))
+        }
+        return this.transpose().count({axis:1})
+    }
+    /**
+     * Returns the smallest value across an axis
+     * @param {*} options 
+     */
+    sum(options){
+        if(options && options.axis == 1){
+            return new Series(this._values.map(row => stats.sum(row), {index:this.index, name:"sum"}))
+        }
+        return this.transpose().count({axis:1})
     }
 
     /**
