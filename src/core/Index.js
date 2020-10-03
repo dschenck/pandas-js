@@ -1,4 +1,4 @@
-import moment from 'moment'
+import moment from 'dayjs'
 
 import { Series } from './Series'
 import * as utils from './utils'

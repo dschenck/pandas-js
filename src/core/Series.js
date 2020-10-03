@@ -1,4 +1,4 @@
-import moment from 'moment'
+import moment from 'dayjs'
 
 import { Index }     from './Index'
 import { Grouper, Pivot, Rolling } from './Grouper'
