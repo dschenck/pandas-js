@@ -614,7 +614,7 @@ export class Series{
                 }
                 return this.map((value, i) => callback(value, other.iloc(i), i))
             }
-            const index  = this.index.union(other.index).sort()
+            const index  = this.index.union(other.index).sort(utils.defaultsort)
             const values = index.values.map(idx => {
                 return this.index.has(idx) && other.index.has(idx) ? callback(this.loc(idx), other.loc(idx)) : NaN
             })
