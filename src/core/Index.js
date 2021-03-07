@@ -1,4 +1,5 @@
 import datetime   from './libs/datetime'
+import bisect     from './libs/bisect' 
 import * as utils from './utils'
 import Series     from './Series'
 
@@ -58,6 +59,9 @@ export default class Index{
      */
     get sorted(){
         if(this._options.sorted === undefined){
+            if(this.length == 0){
+                return false
+            }
             if(this._values.reduce((acc, curr, i) => {
                 return acc && (i == 0 || curr >= this._values[i-1])
             }, true)){
@@ -160,7 +164,7 @@ export default class Index{
         if(!this.unique){
             throw new Error("loc requires index to have unique values only")
         }
-        if(utils.isIterable(keys)){
+        if(utils.isIterable(keys) && !utils.isString(keys)){
             return new Index(keys.map(key => this.indexOf(key)), {name:this.name})
         }
         return this.indexOf(keys)
@@ -194,19 +198,15 @@ export default class Index{
             return value
         }
         if(this.sorted == "ascending"){
-            if(this.at(0) < value){
+            if(this.at(0) > value){
                 throw new Error(`value is out of bounds (${value} is lower than the smallest value of the index)`)
             }
-            return this._values.reduce((acc, curr) => {
-                return curr > value ? acc : curr   
-            })
+            return this._values[bisect.bisect(this._values, value) - 1]
         }
-        if(this.at(this.length - 1) < value){
+        if(this.at(this.length - 1) > value){
             throw new Error(`value is out of bounds (${value} is lower than the smallest value of the index)`)
         }
-        return [...this._values].reverse().reduce((acc, curr) => {
-            return curr > value ? acc : curr  
-        })
+        return this._values[this.length - bisect.bisect([...this._values].reverse(), value)]
     }
 
     /**
@@ -369,10 +369,10 @@ export default class Index{
      * Make new Index with passed list of labels deleted.
      */
     drop(labels){
-        if(utils.isIterable(labels)){
-            return this.filter(v => labels.indexOf(v) != -1)
+        if(utils.isIterable(labels) && !utils.isString(labels)){
+            return this.filter(v => labels.indexOf(v) == -1)
         }
-        throw new Error("Expected labels to be an iterable")
+        return this.filter(v => v != labels)
     }
 
     /**

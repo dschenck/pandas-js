@@ -6,29 +6,44 @@ let idx0 = new Index()
 let idx1 = new Index(["A","B","C","D","E","F"], {name:"letters"})
 let idx2 = new Index(utils.range(100), {name:"numbers"})
 
-test('index length should be 100', () => {
-    expect(idx0.length).toBe(0)
-    expect(idx1.length).toBe(6)
-    expect(idx2.length).toBe(100)
+describe("instanciation", () => {
+    test('index length', () => {
+        expect(idx0.length).toBe(0)
+        expect(idx1.length).toBe(6)
+        expect(idx2.length).toBe(100)
+    })
+
+    test('index name should be ', () => {
+        expect(idx0.name).toBe(undefined)
+        expect(idx1.name).toBe("letters")
+        expect(idx2.name).toBe("numbers")
+    })
+
+    test("sorted property", () => {
+        expect(idx0.sorted).toBe(false), 
+        expect(idx1.sorted).toBe("ascending")
+        expect(idx2.sorted).toBe("ascending")
+
+        const idx3 = new Index([10,9,8,7])
+        expect(idx3.sorted).toBe("descending")
+
+        const idx4 = new Index([10,5,16,4])
+        expect(idx4.sorted).toBe(false)
+    })
 })
 
-test('index name should be ', () => {
-    expect(idx0.name).toBe(undefined)
-    expect(idx1.name).toBe("letters")
-    expect(idx2.name).toBe("numbers")
-})
-
-test("index should have", () => {
-    expect(idx0.has(0)).toBe(false)
-    expect(idx1.has("A")).toBe(true)
-    expect(idx1.has("Z")).toBe(false)
-    expect(idx2.has(50)).toBe(true)
-    expect(idx2.has(100)).toBe(false)
+describe("value lookups", () => {
+    test("index should have", () => {
+        expect(idx0.has(0)).toBe(false)
+        expect(idx1.has("A")).toBe(true)
+        expect(idx1.has("Z")).toBe(false)
+        expect(idx2.has(50)).toBe(true)
+        expect(idx2.has(100)).toBe(false)
+    })
 })
 
 test("year", () => {
     const idx = new Index([new Date()])
-
     expect(idx.year()).toBeInstanceOf(Series)
 })
 
@@ -147,12 +162,61 @@ describe("intersection", () => {
     })
 })
 
-test("sorting", () => {
-    const idx = new Index([1,3,2,5,0,4])
-    expect(idx.sort().values).toEqual([0,1,2,3,4,5])
-    expect(idx.values).toEqual([1,3,2,5,0,4])
+describe("sorting", () => {
+    test("numerical index", () => {
+        const idx = new Index([1,3,2,5,0,4,10])
+        expect(idx.sort().values).toEqual([0,1,2,3,4,5,10])
+    })
+    test("sort is not inplace", () => {
+        const idx = new Index([1,3,2,5,0,4,10])
+        expect(idx.values).toEqual([1,3,2,5,0,4,10])
+    })
 })
 
+describe("asof", () => {
+    test("ascending index", () => {
+        const idx = new Index([1,3,5,7,9,11])
+
+        expect(idx.asof(1)).toBe(1)
+        expect(idx.asof(2)).toBe(1)
+        expect(idx.asof(3)).toBe(3)
+        expect(idx.asof(11)).toBe(11)
+        expect(idx.asof(99)).toBe(11)
+        expect(() => idx.asof(0)).toThrow(Error)
+    })
+
+    test("descending index", () => {
+        const idx = new Index([11,9,7,5,3,1])
+
+        expect(idx.asof(1)).toBe(1)
+        expect(idx.asof(2)).toBe(1)
+        expect(idx.asof(3)).toBe(3)
+        expect(idx.asof(11)).toBe(11)
+        expect(idx.asof(99)).toBe(11)
+        expect(() => idx.asof(0)).toThrow(Error)
+    })
+
+    test("unsorted index", () => {
+        const idx = new Index([11,9,10,5,7,1])
+        expect(() => idx.asof(10)).toThrow(Error)
+    })
+})
+
+describe("dropping labels", () => {
+    test("dropping single value", () => {
+        let idx = new Index(["A","B","C","D","E","F"], {name:"letters"})
+        expect(idx.drop("A").values).toEqual(["B","C","D","E","F"])
+        expect(idx.drop("C").values).toEqual(["A","B","D","E","F"])
+    })
+    test("dropping a value not in the index", () => {
+        let idx = new Index(["A","B","C","D","E","F"], {name:"letters"})
+        expect(idx.drop("Z").values).toEqual(idx.values)
+    })
+    test("dropping a list of labels", () => {
+        let idx = new Index(["A","B","C","D","E","F"], {name:"letters"})
+        expect(idx.drop(["A","C"]).values).toEqual(["B","D","E","F"])
+    })
+})
 
 
 
