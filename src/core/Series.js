@@ -1,12 +1,12 @@
 import moment from 'dayjs'
 
-import { Index }     from './Index'
+import Index from './Index'
 import { Grouper, Pivot, Rolling } from './Grouper'
 import { DataFrame } from './DataFrame'
 import * as utils    from './utils'
 import * as stats    from './stats'
 
-export class Series{
+export default class Series{
     constructor(data, options){
         if(data === undefined){
             this._values = []

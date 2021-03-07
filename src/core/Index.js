@@ -1,50 +1,111 @@
-import moment from 'dayjs'
-
-import { Series } from './Series'
+import datetime   from './libs/datetime'
 import * as utils from './utils'
+import Series     from './Series'
 
-class Index{
+export default class Index{ 
     constructor(values, options){
+        if(values instanceof Index){
+            if(!options){
+                return values
+            }
+            this._values  = values._values
+            this._options = {...values.options, ...options}
+            return this
+        }
         if(values === undefined){
-            this.values = []
+            this._values = []
         }
-        else if(values instanceof Index){
-            this.values = values.values
-            this.name   = values.name
+        else if(utils.isIterable(values)){
+            this._values = [...values]
         }
-        else {
-            this.values = values
+        else{
+            throw new Error("Expected values to be an iterable")
         }
-        if(options && options.name){
-            this.name = options.name
+        if(options){
+            this._options = {...options}
+        }
+        else{
+            this._options = {}
         }
     }
+
+    /**
+     * Returns the values of the index as a native array
+     */
     get values(){
         return [...this._values]
     }
-    set values(values){
-        this._values = [...values]
-        this._keymap = new Map(this._values.map((key, pos) => [key, pos]))
-        if(this._values.length != this._keymap.size){
-            throw new Error("Index cannot have duplicate values")
+
+    /**
+     * Returns a Map mapping keys to their positions
+     */
+    get keymap(){
+        if(!this._options.keymap){
+            this._options.keymap = new Map(this._values.map((key, i) => [key, i]))
         }
+        return this._options.keymap
     }
+
+    /**
+     * Returns the name of the index (or undefined)
+     */
     get name(){
-        return this._name
+        return this._options.name
     }
-    set name(name){
-        this._name = name
+
+    /**
+     * Returns one of false, 'ascending' or 'descending'
+     */
+    get sorted(){
+        if(this._options.sorted === undefined){
+            if(this._values.reduce((acc, curr, i) => {
+                return acc && (i == 0 || curr >= this._values[i-1])
+            }, true)){
+                this._options.sorted = "ascending"
+            }
+            else if(this._values.reduce((acc, curr, i) => {
+                return acc && (i == 0 || curr <= this._values[i-1])
+            }, true)){
+                this._options.sorted = "descending"
+            }
+            else{
+                this._options.sorted = false
+            }
+        }
+        return this._options.sorted
     }
+
+    /**
+     * Returns the size of the index
+     */
     get length(){
         return this._values.length
     }
-    get keymap(){
-        return this._keymap
-    }
-    get series(){
-        return new Series(this._values, {index:this, name:this.name})
+
+    /**
+     * Returns true if the index is empty
+     */
+    get empty(){
+        return this.length == 0
     }
 
+    /**
+     * Returns the options
+     */
+    get options(){
+        return {...this._options}
+    }
+
+    /**
+     * Returns true if the index contains only unique values
+     */
+    get unique(){
+        return this.keymap.size == this.length
+    }
+
+    /**
+     * Iteration protocol
+     */
     [Symbol.iterator]() {
         let index = 0;
     
@@ -63,8 +124,9 @@ class Index{
      * Returns a new axis
      */
     copy(){
-        return new Index(this)
+        return new Index(this._values, this.options)
     }
+
     /**
      * Returns true if the key is in the axis
      * @param {*} key 
@@ -72,48 +134,88 @@ class Index{
     has(key){
         return this.keymap.has(key)
     }
+
     /**
      * Returns the 0-based position of the key in the axis
      * @param {*} key 
      */
     indexOf(key){
+        if(!this.unique){
+            throw new Error("indexOf requires index to have unique values only")
+        }
         if(this.has(key)){
             return this.keymap.get(key)
         }
-        throw new Error(`KeyError: key ${key} not in axis`)
+        throw new Error(`key ${key} not in axis`)
     }
+
     /**
      * Returns a new axis with the position of the passed keys
      * If the keys is a mappable object, then it returns a new 
-     * axis with the position of each of the passed key
+     * index with the position of each of the passed key
+     * 
      * @param {*} keys 
      */
     loc(keys){
-        if(utils.ismappable(keys)){
+        if(!this.unique){
+            throw new Error("loc requires index to have unique values only")
+        }
+        if(utils.isIterable(keys)){
             return new Index(keys.map(key => this.indexOf(key)), {name:this.name})
         }
         return this.indexOf(keys)
     }
+
     /**
      * 
      * @param {*} index 
      */
     at(index){
         if(utils.isNaN(index) || !Number.isInteger(index)){
-            throw new Error('Index should be an integer')
+            throw new Error('index should be an integer')
         }
         if(index >= this.length || (this.length + index) < 0){
-            throw new Error(`Out of bounds error: index is ${this.length} long, ${index} given`)
+            throw new Error(`index is out of bounds (index is ${this.length} long, ${index} given)`)
         }
         return index < 0 ? this._values[this.length + index] : this._values[index] 
     }
+
+    /**
+     * Returns the largest value in the index 
+     * less than the given label
+     * 
+     * Todo: optimise using bisection
+     */ 
+    asof(value){
+        if(!this.sorted){
+            throw new Error("asof requires that the index is sorted")
+        }
+        if(this.keymap.has(value)){
+            return value
+        }
+        if(this.sorted == "ascending"){
+            if(this.at(0) < value){
+                throw new Error(`value is out of bounds (${value} is lower than the smallest value of the index)`)
+            }
+            return this._values.reduce((acc, curr) => {
+                return curr > value ? acc : curr   
+            })
+        }
+        if(this.at(this.length - 1) < value){
+            throw new Error(`value is out of bounds (${value} is lower than the smallest value of the index)`)
+        }
+        return [...this._values].reverse().reduce((acc, curr) => {
+            return curr > value ? acc : curr  
+        })
+    }
+
     /**
      * Returns the label at the index
      * If given an iterable, then 
      * @param {*} indices 
      */
     iloc(indices){
-        if(utils.ismappable(indices)){
+        if(utils.isIterable(indices)){
             return new Index(indices.map(i => this.at(i)), {name:this.name})
         }
         return this.at(indices)
@@ -150,92 +252,54 @@ class Index{
         }
         return new Index(this._values.slice(start, stop), {name:this.name})
     }
-    /**
-     * Add a key to the index
-     * 
-     * @param {*} label 
-     * @param {*} options 
-     */
-    push(label, options){
-        if(options && options.inplace){
-            this.values = this._values.push(label)
-            return
-        }
-        return new Index([...this._values].push(label), {name:this.name})
-    }
-    /**
-     * Pops the last value from the indices
-     * 
-     * @param {*} options 
-     */
-    pop(options){
-        if(options && options.inplace){
-            this.values = this._values.pop()
-            return
-        }
-        return new Index(this._values.pop(), {name:this.name})
-    }
+    
     /**
      * Renames the index 
      * 
      * @param {*} name 
      * @param {*} options 
      */
-    rename(name, options){
-        if(options && options.inplace){
-            this._name = name
-            return
-        }
-        return new Index(this._values, {name:this.name})
+    rename(name){
+        return new Index(this._values, {...this.options, name:name})
     }
+    
     /**
      * Sort the index 
      * 
-     * @param {*} func 
-     * @param {*} options 
+     * @param {*} func sorting function
      */
-    sort(func, options){
-        if(options && options.inplace){
-            this.values = this._values.sort(func)
-            return
-        }
-        return new Index([...this._values].sort(func), {name:this.name})
+    sort(func){
+        const values = this.values.sort(func || ((a, b) => a < b ? -1 : 1))
+        return new Index(values, {...this.options, sorted:"ascending"})
     }
+
     /**
      * Reverse the index (first to last)
-     * 
-     * @param {*} options 
      */
-    reverse(options){
-        if(options && options.inplace){
-            this.values = this._values.reverse()
-            return this
+    reverse(){
+        if(this.sorted == "ascending"){
+            return new Index(this.values.reverse(), {...this.options, sorted:"descending"})
         }
-        return new Index([...this._values].reverse(), {name:this.name})
+        if(this.sorted == "descending"){
+            return new Index(this.values.reverse(), {...this.options, sorted:"ascending"})
+        }
+        return new Index(this.values.reverse(), this.options)
     }
+
     /**
      * Returns a new series mapping this index to a new series
      * 
      * @param {*} func 
-     * @param {*} options 
      */
-    map(func, options){
-        if(options && options.inplace){
-            this.values = this._values.map(func)
-            return
-        }
-        return new Index(this._values.map(func), {name:this._name})
+    map(func){
+        return new Index(this._values.map(func), {name:this.name})
     }
 
     /**
      * Filters the index by a callback
      */
-    filter(func, options){
-        if(options && options.inplace){
-            this.values = this._values.filter(func)
-            return
-        }
-        return new Index(this._values.filter(func), {name:this._name})
+    filter(func){
+        return new Index(this._values.filter(func), {name:this.name})
     }
 
     /**
@@ -243,7 +307,7 @@ class Index{
      */
     max(){
         if(this.length == 0){
-            throw new Error("Could not compute max on empty index")
+            throw new Error("Cannot compute max of empty index")
         }
         return this._values.reduce((prev, curr) => prev > curr ? prev : curr, undefined)
     }
@@ -253,7 +317,7 @@ class Index{
      */
     min(){
         if(this.length == 0){
-            throw new Error("Could not compute min on empty index")
+            throw new Error("Cannot compute min of empty index")
         }
         return this._values.reduce((prev, curr) => prev < curr ? prev : curr, undefined)
     }
@@ -290,73 +354,103 @@ class Index{
         if(mask.length != this.length){
             throw new Error("Mask should be of the same length as the axis")
         }
-        return new Index([...mask].map((value, i) => value ? i : -1).filter(value => value !== -1).map(i => this._values[i]), {name:this.name})
+
+        return new Index(
+            [...mask].map((value, i) => {
+                return value ? i : -1
+            }).filter(value => {
+                return value !== -1
+            }).map(i => this._values[i]), 
+            {name:this.name}
+        )
+    }
+
+    /**
+     * Make new Index with passed list of labels deleted.
+     */
+    drop(labels){
+        if(utils.isIterable(labels)){
+            return this.filter(v => labels.indexOf(v) != -1)
+        }
+        throw new Error("Expected labels to be an iterable")
     }
 
     /**
      * Creates a new index combining the values of this and another iterable
+     * The new index is sorted in ascending order
      * 
      * @param {*} other 
      */
     union(other){
-        return new Index(Array.from(new Set(this._values.concat([...other]))))
+        const values = new Set([...other].concat(this._values))
+        
+        return new Index(
+            Array.from(values).sort((a, b) => a < b ? -1 : 1), 
+            {sorted:"ascending", name:this.name}
+        )
     }
 
     /**
      * Returns a new index combining the intersection of this and another iterble
+     * The new index is sorted in ascending order
+     * 
      * @param {*} other 
      */
     intersection(other){
-        const [ idx1, idx2 ] = [ new Set(this._values), new Set(other) ]
-        const intersection = new Set()
-        for(let idx of idx1){
-            if(idx2.has(idx)) intersection.add(idx)
-        }
-        return new Index(Array.from(intersection))
+        const values = [...other].filter(v => this.has(v)).sort((a, b) => a < b ? -1 : 1)
+        return new Index(values, {sorted:"ascending", name:this.name})
+    }
+
+    /**
+     * Returns a new index containing elements in self but not in other
+     * 
+     * @param {*} other Another iterable
+     */
+    difference(other){
+        const intersection = this.intersection(other)
+        return this.filter(v => !intersection.has(v), {name:this.name})
     }
 
     /**
      * Returns a series with the year
      */
     year(){
-        return new Series(this._values.map(v => moment(v).year()), {index:this, name:this.name})
+        return new Series(this._values.map(v => datetime(v).year()), {index:this, name:this.name})
     }
     /**
      * Returns a series with the year
      */
     quarter(){
-        return new Series(this._values.map(v => moment(v).quarter()), {index:this, name:this.name})
+        return new Series(this._values.map(v => datetime(v).quarter()), {index:this, name:this.name})
     }
     /**
      * Returns a series with the year
      */
     month(){
-        return new Series(this._values.map(v => moment(v).month()), {index:this, name:this.name})
+        return new Series(this._values.map(v => datetime(v).month()), {index:this, name:this.name})
     }
     /**
      * Returns a series with the year
      */
     weeknum(){
-        return new Series(this._values.map(v => moment(v).isoWeek()), {index:this, name:this.name})
+        return new Series(this._values.map(v => datetime(v).isoWeek()), {index:this, name:this.name})
     }
     /**
      * Returns a series with the weekday (1 for Monday, 7 for Sunday)
      */
     weekday(){
-        return new Series(this._values.map(v => moment(v).isoWeekday()), {index:this, name:this.name})
+        return new Series(this._values.map(v => datetime(v).isoWeekday()), {index:this, name:this.name})
     }
     /**
      * Returns a series with the day of the month
      */
     day(){
-        return new Series(this._values.map(v => moment(v).date()), {index:this, name:this.name})
+        return new Series(this._values.map(v => datetime(v).date()), {index:this, name:this.name})
     }
     /**
      * Returns a series with the day of the month
      */
     dayofyear(){
-        return new Series(this._values.map(v => moment(v).dayOfYear()), {index:this, name:this.name})
+        return new Series(this._values.map(v => datetime(v).dayOfYear()), {index:this, name:this.name})
     }
 }
-
-export { Index }

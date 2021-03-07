@@ -1,16 +1,10 @@
-import { Index }   from '../core/Index'
-import { Series } from '../core/Series'
+import Index  from '../core/Index'
+import Series from '../core/Series'
 import * as utils from '../core/utils'
 
 let idx0 = new Index()
 let idx1 = new Index(["A","B","C","D","E","F"], {name:"letters"})
 let idx2 = new Index(utils.range(100), {name:"numbers"})
-
-describe("instanciation", () => {
-    it("should raise an error", () => {
-        expect(() => new Index([1,1,2])).toThrow(Error)
-    })
-})
 
 test('index length should be 100', () => {
     expect(idx0.length).toBe(0)
@@ -36,6 +30,17 @@ test("year", () => {
     const idx = new Index([new Date()])
 
     expect(idx.year()).toBeInstanceOf(Series)
+})
+
+describe("index with duplicate labels", () => {
+    it("should return false", () => {
+        const index = new Index([1,1,2,3])
+        expect(index.unique).toBe(false)
+    })
+    it("should return true", () => {
+        const index = new Index([1,0,2,3])
+        expect(index.unique).toBe(true)
+    })
 })
 
 describe("indexing", () => {
@@ -98,7 +103,10 @@ test('reverse', () => {
     expect(idx0.reverse()).toBeInstanceOf(Index)
     expect(idx1.reverse().at(0)).toBe("F")
     expect(idx1.at(0)).toBe("A")
-    expect(idx2.reverse().idxmax()).toBe(0)
+    
+    //idx2 is 0...99
+    expect(idx2.reverse().at(0)).toBe(99)
+    expect(idx2.reverse().at(99)).toBe(0)
 })
 
 test("mask", () => {
