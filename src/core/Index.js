@@ -60,7 +60,7 @@ export default class Index{
     get sorted(){
         if(this._options.sorted === undefined){
             if(this.length == 0){
-                return false
+                throw new Error("empty indices cannot be sorted")
             }
             if(this._values.reduce((acc, curr, i) => {
                 return acc && (i == 0 || curr >= this._values[i-1])
@@ -105,6 +105,21 @@ export default class Index{
      */
     get unique(){
         return this.keymap.size == this.length
+    }
+
+    /**
+     * Returns true if the index contains numeric values only
+     */
+    get numeric(){
+        if(this.length == 0){
+            throw new Error("unable to determine datatype of empty index")
+        }
+        if(this._options.numeric === undefined){
+            this._options.numeric = this._values.every(v => {
+                return utils.isNumeric(v)
+            })
+        }
+        return this._options.numeric
     }
 
     /**
@@ -192,7 +207,10 @@ export default class Index{
      */ 
     asof(value){
         if(!this.sorted){
-            throw new Error("asof requires that the index is sorted")
+            throw new Error("asof requires a sorted index")
+        }
+        if(!this.numeric){
+            throw new Error("asof requires a numeric index")
         }
         if(this.keymap.has(value)){
             return value
@@ -269,6 +287,15 @@ export default class Index{
      * @param {*} func sorting function
      */
     sort(func){
+        if(func === undefined){
+            if(!this.numeric){
+                throw new Error("sort requires a numeric index; alternatively, pass a comparison function")
+            }
+            return new Index(
+                this.values.sort((a, b) => a < b ? -1 : 1), 
+                {...this.options, sorted:"ascending"}
+            )
+        }
         const values = this.values.sort(func || ((a, b) => a < b ? -1 : 1))
         return new Index(values, {...this.options, sorted:"ascending"})
     }
@@ -277,6 +304,9 @@ export default class Index{
      * Reverse the index (first to last)
      */
     reverse(){
+        if(this.length == 0){
+            return new Index([], {name:this.name})
+        }
         if(this.sorted == "ascending"){
             return new Index(this.values.reverse(), {...this.options, sorted:"descending"})
         }
@@ -309,6 +339,9 @@ export default class Index{
         if(this.length == 0){
             throw new Error("Cannot compute max of empty index")
         }
+        if(!this.numeric){
+            throw new Error("Cannot compute max on non-numeric index")
+        }
         return this._values.reduce((prev, curr) => prev > curr ? prev : curr, undefined)
     }
 
@@ -318,6 +351,9 @@ export default class Index{
     min(){
         if(this.length == 0){
             throw new Error("Cannot compute min of empty index")
+        }
+        if(!this.numeric){
+            throw new Error("Cannot compute min on non-numeric index")
         }
         return this._values.reduce((prev, curr) => prev < curr ? prev : curr, undefined)
     }

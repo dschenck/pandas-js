@@ -20,7 +20,7 @@ describe("instanciation", () => {
     })
 
     test("sorted property", () => {
-        expect(idx0.sorted).toBe(false), 
+        expect(() => idx0.sorted).toThrow(Error), 
         expect(idx1.sorted).toBe("ascending")
         expect(idx2.sorted).toBe("ascending")
 
@@ -29,6 +29,15 @@ describe("instanciation", () => {
 
         const idx4 = new Index([10,5,16,4])
         expect(idx4.sorted).toBe(false)
+    })
+
+    test("numeric property", () => {
+        expect(() => idx0.numeric).toThrow(Error)
+        expect(idx1.numeric).toBe(false)
+        expect(idx2.numeric).toBe(true)
+
+        const idx4 = new Index([1,true,false,4])
+        expect(idx4.numeric).toBe(true)
     })
 })
 
@@ -98,19 +107,16 @@ describe("slicing", () => {
 })
 
 test('min', () => {
-    expect(idx1.min()).toBe("A")
     expect(idx2.min()).toBe(0)
     expect(() => idx0.min()).toThrow(Error)
 })
 
 test('max', () => {
-    expect(idx1.max()).toBe("F")
     expect(idx2.max()).toBe(99)
     expect(() => idx0.max()).toThrow(Error)
 })
 
 test('idxmax', () => {
-    expect(idx1.idxmax()).toBe(5)
     expect(idx2.idxmax()).toBe(99)
 })
 
