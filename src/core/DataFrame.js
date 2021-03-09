@@ -1,10 +1,10 @@
-import { Index }   from './Index'
+import Index   from './Index'
 import { Grouper } from './Grouper'
-import { Series }  from './Series'
+import Series from './Series'
 import * as utils  from './utils'
 import * as stats  from './stats'
 
-export class DataFrame{
+export default class DataFrame{
     constructor(data, options){
         if(data === undefined){
             if(!(options && options.index && options.columns)){

@@ -216,15 +216,21 @@ export default class Index{
             return value
         }
         if(this.sorted == "ascending"){
-            if(this.at(0) > value){
+            if(value < this.at(0)){
                 throw new Error(`value is out of bounds (${value} is lower than the smallest value of the index)`)
             }
-            return this._values[bisect.bisect(this._values, value) - 1]
+            if(value > this.at(this.length - 1)){
+                return this.at(this.length - 1)
+            }
+            return bisect.asof(this._values, value)
         }
-        if(this.at(this.length - 1) > value){
+        if(value < this.at(this.length - 1)){
             throw new Error(`value is out of bounds (${value} is lower than the smallest value of the index)`)
         }
-        return this._values[this.length - bisect.bisect([...this._values].reverse(), value)]
+        if(value > this.at(0)){
+            return this.at(0)
+        }
+        return bisect.asof([...this._values].reverse(), value)
     }
 
     /**
@@ -296,8 +302,7 @@ export default class Index{
                 {...this.options, sorted:"ascending"}
             )
         }
-        const values = this.values.sort(func || ((a, b) => a < b ? -1 : 1))
-        return new Index(values, {...this.options, sorted:"ascending"})
+        return new Index(this.values.sort(func), {...this.options})
     }
 
     /**

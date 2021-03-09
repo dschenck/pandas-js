@@ -1,5 +1,5 @@
-import { Index }   from '../core/Index'
-import { Series }  from '../core/Series'
+import Index       from '../core/Index'
+import Series      from '../core/Series'
 import { Grouper } from '../core/Grouper'
 import * as utils  from '../core/utils'
 

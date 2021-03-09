@@ -202,6 +202,14 @@ describe("asof", () => {
         expect(() => idx.asof(0)).toThrow(Error)
     })
 
+    test("with 0", () => {
+        const idx = new Index([0,2,4,6,8,10,12,14,16,18])
+
+        expect(idx.asof(0)).toBe(0)
+        expect(idx.asof(1)).toBe(0)
+        expect(idx.asof(2)).toBe(2)
+    })
+
     test("unsorted index", () => {
         const idx = new Index([11,9,10,5,7,1])
         expect(() => idx.asof(10)).toThrow(Error)

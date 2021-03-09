@@ -1,6 +1,6 @@
-import { Series }  from '../core/Series'
-import { Index }    from '../core/Index'
-import * as utils  from '../core/utils'
+import Series     from '../core/Series'
+import Index      from '../core/Index'
+import * as utils from '../core/utils'
 
 let s1 = new Series([0,1,2,3,4,5,6,7], {name:'integers', index:["A","B","C","D","E","F","G","H"]})
 
@@ -528,6 +528,26 @@ describe("quantile", () => {
     })
 })
 
+describe("asof", () => {
+    const s1 = new Series([0,1,2,3,4,5,6,7,8,9], 
+        {index:[0,2,4,6,8,10,12,14,16,18]})
+
+    test("index", () => {
+        expect(s1.index.values).toEqual([0,2,4,6,8,10,12,14,16,18])
+    })
+
+    test("basic asof", () => {
+        expect(s1.asof(0)).toBe(0)
+        expect(s1.asof(1)).toBe(0)
+        expect(s1.asof(2)).toBe(1)
+        expect(s1.asof(3)).toBe(1)
+        expect(s1.asof(17)).toBe(8)
+        expect(s1.asof(18)).toBe(9)
+        expect(s1.asof(99)).toBe(9)
+        expect(() => s1.asof(-1)).toThrow(Error)
+    })
+})
+
 describe("reindex", () => {
     let s = new Series([1,2,3,4,5,6,7,8,9])
 
@@ -540,6 +560,14 @@ describe("reindex", () => {
         expect(s.reindex([4,8,12])).toBeInstanceOf(Series)
         expect(s.reindex([4,8,12]).length).toEqual(3)
         expect(s.reindex([4,8,12]).values).toEqual([5,9,NaN])
+    })
+
+    const s1 = new Series([0,1,2,3,4,5,6,7,8,9], {index:[0,2,4,6,8,10,12,14,16,18]})
+
+    test("reindexing and filling", () => {
+        expect(s1.reindex(
+            new Index([1,3,5,5.5]), {fillna:"ffill"}
+        ).values).toEqual([0,1,2,NaN])
     })
 })
 

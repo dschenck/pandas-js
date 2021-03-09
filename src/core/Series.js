@@ -2,7 +2,7 @@ import moment from 'dayjs'
 
 import Index from './Index'
 import { Grouper, Pivot, Rolling } from './Grouper'
-import { DataFrame } from './DataFrame'
+import DataFrame from './DataFrame'
 import * as utils    from './utils'
 import * as stats    from './stats'
 
@@ -155,7 +155,7 @@ export default class Series{
      * Exclusive of upper bound
      * 
      * @param {*} start 
-     * @param {*} stop 
+     * @param {*} stop
      */
     slice(start, stop){
         const index = this.index.slice(start, stop)
@@ -993,8 +993,8 @@ export default class Series{
      * @param {*} label 
      * @param {*} options 
      */
-    asof(label, options){
-        return this._values[this.index.loc(this.index.asof(label, options))]
+    asof(label){
+        return this._values[this.index.loc(this.index.asof(label))]
     }
 
     /**
@@ -1159,8 +1159,23 @@ export default class Series{
      * 
      * @param {*} index 
      */
-    reindex(index){
-        return new Series([...index].map(idx => this.index.has(idx) ? this.loc(idx) : NaN), {index:index, name:this.name})
+    reindex(index, options){
+        const values = [...index].map((idx, i, index) => {
+            if(this.index.has(idx)){
+                return this.loc(idx)
+            }
+            if(options && options.fillna == "ffill"){
+                //get the most recent value which is strictly after the previous index
+                if(this.index.sorted == "ascending" && idx >= this.index.at(0)){
+                    if(i == 0 || this.index.asof(idx) > index[i-1]){
+                        return this.asof(idx)
+                    }
+                    return NaN
+                }
+            }
+            return NaN
+        })
+        return new Series(values, {index:index, name:this.name})
     }
 
     /**
