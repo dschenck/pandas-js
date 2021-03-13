@@ -55,6 +55,13 @@ export default class Index{
     }
 
     /**
+     * Returns true if the index is natively sortable
+     */
+    get sortable(){
+        return this.numeric || this.categorical
+    }
+
+    /**
      * Returns one of false, 'ascending' or 'descending'
      */
     get sorted(){
@@ -62,15 +69,20 @@ export default class Index{
             if(this.length == 0){
                 throw new Error("empty indices cannot be sorted")
             }
-            if(this._values.reduce((acc, curr, i) => {
-                return acc && (i == 0 || curr >= this._values[i-1])
-            }, true)){
-                this._options.sorted = "ascending"
-            }
-            else if(this._values.reduce((acc, curr, i) => {
-                return acc && (i == 0 || curr <= this._values[i-1])
-            }, true)){
-                this._options.sorted = "descending"
+            if(this.sortable){
+                if(this._values.reduce((acc, curr, i) => {
+                    return acc && (i == 0 || curr >= this._values[i-1])
+                }, true)){
+                    this._options.sorted = "ascending"
+                }
+                else if(this._values.reduce((acc, curr, i) => {
+                    return acc && (i == 0 || curr <= this._values[i-1])
+                }, true)){
+                    this._options.sorted = "descending"
+                }
+                else{
+                    this._options.sorted = false
+                }
             }
             else{
                 this._options.sorted = false
@@ -120,6 +132,21 @@ export default class Index{
             })
         }
         return this._options.numeric
+    }
+
+    /**
+     * Returns true if the index contains string values only
+     */
+    get categorical(){
+        if(this.length == 0){
+            throw new Error("unable to determine datatype of empty index")
+        }
+        if(this._options.categorical === undefined){
+            this._options.categorical = this._values.every(v => {
+                return utils.isString(v)
+            })
+        }
+        return this._options.categorical
     }
 
     /**
@@ -176,9 +203,6 @@ export default class Index{
      * @param {*} keys 
      */
     loc(keys){
-        if(!this.unique){
-            throw new Error("loc requires index to have unique values only")
-        }
         if(utils.isIterable(keys) && !utils.isString(keys)){
             return new Index(keys.map(key => this.indexOf(key)), {name:this.name})
         }
@@ -209,8 +233,8 @@ export default class Index{
         if(!this.sorted){
             throw new Error("asof requires a sorted index")
         }
-        if(!this.numeric){
-            throw new Error("asof requires a numeric index")
+        if(!this.sortable){
+            throw new Error("asof requires a sortable index")
         }
         if(this.keymap.has(value)){
             return value
@@ -294,8 +318,8 @@ export default class Index{
      */
     sort(func){
         if(func === undefined){
-            if(!this.numeric){
-                throw new Error("sort requires a numeric index; alternatively, pass a comparison function")
+            if(!this.sortable){
+                throw new Error("sort requires a sortable index; alternatively, pass a comparison function")
             }
             return new Index(
                 this.values.sort((a, b) => a < b ? -1 : 1), 
@@ -344,8 +368,8 @@ export default class Index{
         if(this.length == 0){
             throw new Error("Cannot compute max of empty index")
         }
-        if(!this.numeric){
-            throw new Error("Cannot compute max on non-numeric index")
+        if(!this.sortable){
+            throw new Error("Cannot compute max on non-sortable index")
         }
         return this._values.reduce((prev, curr) => prev > curr ? prev : curr, undefined)
     }
@@ -357,8 +381,8 @@ export default class Index{
         if(this.length == 0){
             throw new Error("Cannot compute min of empty index")
         }
-        if(!this.numeric){
-            throw new Error("Cannot compute min on non-numeric index")
+        if(!this.sortable){
+            throw new Error("Cannot compute min on non-sortable index")
         }
         return this._values.reduce((prev, curr) => prev < curr ? prev : curr, undefined)
     }
@@ -422,13 +446,17 @@ export default class Index{
      * 
      * @param {*} other 
      */
-    union(other){
+    union(other, options){
         const values = new Set([...other].concat(this._values))
+        const index  = new Index(Array.from(values), {name:this.name})
         
-        return new Index(
-            Array.from(values).sort((a, b) => a < b ? -1 : 1), 
-            {sorted:"ascending", name:this.name}
-        )
+        if(!options || options.sort === undefined){
+            return index.sortable ? index.sort() : index
+        }
+        if(options.sort){
+            return index.sort()
+        }
+        return index
     }
 
     /**
@@ -437,9 +465,17 @@ export default class Index{
      * 
      * @param {*} other 
      */
-    intersection(other){
-        const values = [...other].filter(v => this.has(v)).sort((a, b) => a < b ? -1 : 1)
-        return new Index(values, {sorted:"ascending", name:this.name})
+    intersection(other, options){
+        const values = [...other].filter(v => this.has(v))
+        const index  = new Index(values, {name:this.name})
+
+        if(!options || options.sort === undefined){
+            return index.sortable ? index.sort() : index
+        }
+        if(options.sort){
+            return index.sort()
+        }
+        return index
     }
 
     /**
@@ -449,7 +485,15 @@ export default class Index{
      */
     difference(other){
         const intersection = this.intersection(other)
-        return this.filter(v => !intersection.has(v), {name:this.name})
+        const index = this.filter(v => !intersection.has(v))
+
+        if(!options || options.sort === undefined){
+            return index.sortable ? index.sort() : index
+        }
+        if(options.sort){
+            return index.sort()
+        }
+        return index
     }
 
     /**
