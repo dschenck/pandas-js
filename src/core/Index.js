@@ -441,6 +441,29 @@ export default class Index{
     }
 
     /**
+     * Create a new index from a list of others
+     * @param {*} others 
+     */
+    static union(others, options){
+        if(!Array.isArray(others)){
+            throw new Error("(static) union expected a list of iterables")
+        }
+        const values = others.reduce((acc, curr) => {
+            return new Set([...acc, ...curr])
+        }, new Set())
+
+        const index = new Index(values, options)
+
+        if(!options || options.sort === undefined){
+            return index.sortable ? index.sort() : index
+        }
+        if(options.sort){
+            return index.sort()
+        }
+        return index
+    }
+
+    /**
      * Creates a new index combining the values of this and another iterable
      * The new index is sorted in ascending order
      * 
@@ -450,6 +473,29 @@ export default class Index{
         const values = new Set([...other].concat(this._values))
         const index  = new Index(Array.from(values), {name:this.name})
         
+        if(!options || options.sort === undefined){
+            return index.sortable ? index.sort() : index
+        }
+        if(options.sort){
+            return index.sort()
+        }
+        return index
+    }
+
+    /**
+     * Create a new index from intersection of others
+     * @param {*} others 
+     */
+    static intersection(others, options){
+        if(!Array.isArray(others)){
+            throw new Error("(static) intersection expected a list of iterables")
+        }
+        const values = others.map(v => new Set(v)).reduce((acc, curr) => {
+            return new Set([...acc].filter(v => curr.has(v)))
+        })
+
+        const index = new Index(values, options)
+
         if(!options || options.sort === undefined){
             return index.sortable ? index.sort() : index
         }

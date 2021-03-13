@@ -232,5 +232,38 @@ describe("dropping labels", () => {
     })
 })
 
+describe("static union", () => {
+    test("basic", () => {
+        let idx = Index.union([[1,2,3],[2,3,4]], {name:"test"})
+        expect(idx.values).toEqual([1,2,3,4])
+        expect(idx.name).toEqual("test")
+    })
+    test("types", () => {
+        let idx = Index.union([[1,2,3],new Index([2,3,4])], {name:"test"})
+        expect(idx.values).toEqual([1,2,3,4])
+    })
+    test("default sort", () => {
+        let idx = Index.union([[1,2,3],[-2,3,4]], {name:"test"})
+        expect(idx.values).toEqual([-2,1,2,3,4])
+        expect(idx.name).toEqual("test")
+    })
+})
+
+describe("static intersection", () => {
+    test("basic", () => {
+        let idx = Index.intersection([[1,2,3],[2,3,4]], {name:"test"})
+        expect(idx.values).toEqual([2,3])
+        expect(idx.name).toEqual("test")
+    })
+    test("types", () => {
+        let idx = Index.intersection([[1,2,3],new Index([2,3,4])], {name:"test"})
+        expect(idx.values).toEqual([2,3])
+    })
+    test("default sort", () => {
+        let idx = Index.intersection([[3,2,1,-1],[-2,-1,3,4]], {name:"test"})
+        expect(idx.values).toEqual([-1,3])
+        expect(idx.name).toEqual("test")
+    })
+})
 
 
