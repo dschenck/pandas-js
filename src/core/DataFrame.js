@@ -1,8 +1,8 @@
 import Index   from './Index'
 import { Grouper } from './Grouper'
 import Series from './Series'
-import * as utils  from './utils'
-import * as stats  from './stats'
+import * as utils from './utils'
+import stats      from './stats'
 
 export default class DataFrame{
     constructor(data, options){

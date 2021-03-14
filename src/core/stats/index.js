@@ -16,7 +16,7 @@ import std      from './std'
 import variance from './variance'
 
 
-export {
+export default {
     all,
     any,
     corr,
