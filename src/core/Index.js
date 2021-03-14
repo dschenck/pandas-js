@@ -226,15 +226,13 @@ export default class Index{
     /**
      * Returns the largest value in the index 
      * less than the given label
-     * 
-     * Todo: optimise using bisection
      */ 
     asof(value){
-        if(!this.sorted){
-            throw new Error("asof requires a sorted index")
-        }
         if(!this.sortable){
             throw new Error("asof requires a sortable index")
+        }
+        if(!this.sorted){
+            throw new Error("asof requires a sorted index")
         }
         if(this.keymap.has(value)){
             return value
@@ -248,13 +246,15 @@ export default class Index{
             }
             return bisect.asof(this._values, value)
         }
-        if(value < this.at(this.length - 1)){
-            throw new Error(`value is out of bounds (${value} is lower than the smallest value of the index)`)
+        else{
+            if(value < this.at(this.length - 1)){
+                throw new Error(`value is out of bounds (${value} is lower than the smallest value of the index)`)
+            }
+            if(value > this.at(0)){
+                return this.at(0)
+            }
+            return bisect.asof([...this._values].reverse(), value)
         }
-        if(value > this.at(0)){
-            return this.at(0)
-        }
-        return bisect.asof([...this._values].reverse(), value)
     }
 
     /**
@@ -445,7 +445,7 @@ export default class Index{
      * @param {*} others 
      */
     static union(others, options){
-        if(!Array.isArray(others)){
+        if(!Array.isArray(others) || !others.every(utils.isIterable)){
             throw new Error("(static) union expected a list of iterables")
         }
         const values = others.reduce((acc, curr) => {
@@ -487,7 +487,7 @@ export default class Index{
      * @param {*} others 
      */
     static intersection(others, options){
-        if(!Array.isArray(others)){
+        if(!Array.isArray(others) || !others.every(utils.isIterable)){
             throw new Error("(static) intersection expected a list of iterables")
         }
         const values = others.map(v => new Set(v)).reduce((acc, curr) => {
@@ -548,36 +548,42 @@ export default class Index{
     year(){
         return new Series(this._values.map(v => datetime(v).year()), {index:this, name:this.name})
     }
+
     /**
      * Returns a series with the year
      */
     quarter(){
         return new Series(this._values.map(v => datetime(v).quarter()), {index:this, name:this.name})
     }
+
     /**
      * Returns a series with the year
      */
     month(){
         return new Series(this._values.map(v => datetime(v).month()), {index:this, name:this.name})
     }
+
     /**
      * Returns a series with the year
      */
     weeknum(){
         return new Series(this._values.map(v => datetime(v).isoWeek()), {index:this, name:this.name})
     }
+
     /**
      * Returns a series with the weekday (1 for Monday, 7 for Sunday)
      */
     weekday(){
         return new Series(this._values.map(v => datetime(v).isoWeekday()), {index:this, name:this.name})
     }
+
     /**
      * Returns a series with the day of the month
      */
     day(){
         return new Series(this._values.map(v => datetime(v).date()), {index:this, name:this.name})
     }
+    
     /**
      * Returns a series with the day of the month
      */
