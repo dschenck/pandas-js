@@ -1,7 +1,6 @@
-import moment from 'dayjs'
-
-import Index from './Index'
+import Index         from './Index'
 import { SeriesGroupby, Pivot, Rolling } from './Grouper'
+import datetime      from './libs/datetime'
 import * as utils    from './utils'
 import * as stats    from './stats'
 
@@ -1158,15 +1157,15 @@ export default class Series{
         const groups = this.index._values.map(date => {
             switch(frequency){
                 case "D":
-                    return moment(date).endOf("day").valueOf()
+                    return datetime(date).endOf("day").valueOf()
                 case "W": 
-                    return moment(date).endOf("week").startOf("day").valueOf()
+                    return datetime(date).endOf("week").startOf("day").valueOf()
                 case "M":
-                    return moment(date).endOf("month").startOf("day").valueOf()
+                    return datetime(date).endOf("month").startOf("day").valueOf()
                 case "Q":
-                    return moment(date).endOf("quarter").startOf("day").valueOf()
+                    return datetime(date).endOf("quarter").startOf("day").valueOf()
                 case "Y":
-                    return moment(date).endOf("year").startOf("day").valueOf()
+                    return datetime(date).endOf("year").startOf("day").valueOf()
             }
         })
         return this.groupby(groups)
