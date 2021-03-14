@@ -108,11 +108,8 @@ export default class Series{
 
     /**
      * Returns a new renamed series
-     * If options.inplace, then the operation is in-place
-     *    and returns nothing
      * 
      * @param {*} name the new name
-     * @param {*} options options.inplace to change operation to inplace
      */
     rename(name){
         return new Series(this._values, {name:name, index:this.index})
@@ -214,15 +211,9 @@ export default class Series{
      * Returns a new series with the values reversed relative to the index
      * e.g. first > last
      * 
-     * @param {*} options options.inplace changes the values in-place
      * @returns {Series} 
      */
-    reverse(options){
-        if(options && options.inplace){
-            this._values = [...this._values].reverse()
-            this._index  = this.index.reverse()
-            return
-        }
+    reverse(){
         return new Series([...this._values].reverse(), {name:this.name, index:this.index.reverse()})
     }
 
@@ -231,14 +222,9 @@ export default class Series{
      * The function receives the current value and the positional index
      * 
      * @param {function} func function to compute over each value
-     * @param {*} options options.inplace to transform in-place
      * @returns {Series}
      */
-    map(func, options){
-        if(options && options.inplace){
-            this._values = this._values.map(func)
-            return
-        }
+    map(func){
         return new Series(this._values.map(func), {name:this.name, index:this.index})
     }
 
@@ -1052,12 +1038,6 @@ export default class Series{
             values = values.reverse()
         }
 
-        if(options && options.inplace){
-            this.index  = index
-            this.values = values
-            return
-        }
-        
         return new Series(values, {index:index, name:this.name})
     }
 
