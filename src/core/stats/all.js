@@ -3,6 +3,9 @@
  * 
  * @param {*} values 
  */
-export function all(values){
-    return values.reduce((prev, curr) => curr ? prev && true: false, true)
+export default function all(values){
+    for(let v of values){
+        if(v == false) return false
+    }
+    return true
 }

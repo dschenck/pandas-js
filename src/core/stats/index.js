@@ -1,3 +1,5 @@
+import all      from './all'
+import any      from './any'
 import corr     from './corr'
 import count    from './count'
 import covar    from './covar'
@@ -10,6 +12,8 @@ import variance from './variance'
 
 
 export {
+    all,
+    any,
     corr,
     count,
     covar,
