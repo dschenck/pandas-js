@@ -1188,7 +1188,7 @@ export default class Series{
                     }
                     //if it is an iterable, convert to function
                     if(utils.isIterable(options[axis])){
-                        if(!options[axis].length != this.length){
+                        if(options[axis].length != this.length){
                             throw new Error(`pivot ${axis} length should equal series length`)
                         }
                         return (groups => (v, i) => groups[i])([...options[axis]])
