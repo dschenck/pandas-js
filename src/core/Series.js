@@ -1,8 +1,7 @@
 import moment from 'dayjs'
 
 import Index from './Index'
-import { Grouper, Pivot, Rolling } from './Grouper'
-import DataFrame from './DataFrame'
+import { SeriesGroupby, Pivot, Rolling } from './Grouper'
 import * as utils    from './utils'
 import * as stats    from './stats'
 
@@ -1095,32 +1094,21 @@ export default class Series{
     /**
      * Group values by 
      * @param {*} options 
-     * @returns grouper
+     * @returns SeriesGroupby
      */
-    groupby(groups, options){
-        const grouper = new Grouper(this, options)
-
-        if(!groups){
-            throw new Error("Groupby called incorrectly")
+    groupby(by, options){
+        if(typeof by == "function"){
+            return new SeriesGroupby(this, {...options, grouper:by})
         }
-        if(typeof groups === "function"){
-            for(let i = 0; i < this.length; i++){
-                grouper.add(groups(this._values[i], i), this.index.at(i), this._values[i])
+        if(utils.isIterable(by)){
+            if(by.length != this.length){
+                throw new Error("length of groups should match series length")
             }
+            return new SeriesGroupby(this, {...options, grouper:(groups => {
+                return (value, i) => groups[i]
+            })([...groups])})
         }
-        else if(utils.isIterable(groups) && !utils.isString(groups)){
-            groups = [...groups]
-            if(groups.length !== this.length){
-                throw new Error("Length mismatch")
-            }
-            for(let i = 0; i < this.length; i++){
-                grouper.add(groups[i], this.index.at(i), this._values[i])
-            }
-        }
-        else { 
-            throw new Error("Unexpected grouper")
-        }
-        return grouper
+        throw new Error("Series.groupby called incorrectly")
     }
 
     /**
@@ -1210,28 +1198,30 @@ export default class Series{
      * @param {*} options 
      */
     pivot(options){
-        const grouper = new Pivot(this, options)
+        //function that accepts (value, i) and return {index, column}
+        const grouper = (options => {
+            const callbacks = ["index", "columns"].map(axis => {
+                if(options && options[axis]){
+                    //if the options is already a function
+                    if(typeof options[axis] == "function"){
+                        return options[axis]
+                    }
+                    //if it is an iterable, convert to function
+                    if(utils.isIterable(options[axis])){
+                        if(!options[axis].length != this.length){
+                            throw new Error(`pivot ${axis} length should equal series length`)
+                        }
+                        return (groups => (v, i) => groups[i])([...options[axis]])
+                    }
+                }
+                throw new Error(`${axis} missing from pivot options`)
+            })
+            return (value, i) => {
+                return {index:callbacks[0](value, i), column:callbacks[1](value, i)}
+            }
+        })(options)
 
-        //force index and columns to lists
-        if(typeof options.index === "function"){
-            options.index = this._values.map(options.index)
-        }
-        else{
-            options.index = [...options.index]
-        }
-
-        if(typeof options.columns === "function"){
-            options.columns = this._values.map(options.columns)
-        }
-        else{
-            options.columns = [...options.columns]
-        }
-
-        for(let i = 0; i < this.length; i++){
-            grouper.add(options.index[i], options.columns[i], this.index.at(i), this._values[i])
-        }
-
-        return grouper
+        return new Pivot(this, {grouper})
     }
 
     /**
