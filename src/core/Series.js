@@ -551,7 +551,7 @@ export default class Series{
     }
     
     /**
-     * Returns the cumulaive product
+     * Returns the cumulative product
      */
     cumprod(){
         return this.accumulate((prev, curr) => utils.isNaN(curr) ? prev : utils.isNaN(prev) ? curr : prev * curr)
