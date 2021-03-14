@@ -260,7 +260,7 @@ export default class Series{
      * @returns {boolean}
      */
     all(){
-        return this.reduce((prev, curr) => curr ? prev && true: false, true)
+        return stats.all(this._values)
     }
 
     /**
@@ -269,7 +269,7 @@ export default class Series{
      * @returns {boolean}
      */
     any(){
-        return this.reduce((prev, curr) => curr ? (prev || true) : (prev || false), false)
+        return stats.any(this._values)
     }
 
     /**
@@ -306,7 +306,7 @@ export default class Series{
      * @returns {number|NaN}
      */
     sum(){
-        return this.reduce((prev, curr) => utils.isNaN(curr) ? prev : utils.isNaN(prev) ? curr : curr + prev, NaN)
+        return stats.sum(this._values)
     }
 
     /**
@@ -318,7 +318,7 @@ export default class Series{
      * @returns {number}
      */
     count(skipnan = true){        
-        return this.reduce((prev, curr) => skipnan ? (utils.isNaN(curr) ? prev : prev + 1) : (utils.isNA(curr) ? prev : prev + 1), 0)
+        return stats.count(this._values, {skipnan})
     }
 
     /**
@@ -327,7 +327,7 @@ export default class Series{
      * @returns {number|NaN}
      */
     mean(){
-        return this.count() == 0 ? NaN : this.sum() / this.count()
+        return stats.mean(this._values)
     }
 
     /**
@@ -336,12 +336,7 @@ export default class Series{
      *  @param {int} ddof 
      */
     var(ddof = 1){
-        const mean = this.mean()
-        return this._values.map(v => {
-            return utils.isNaN(v) ? NaN : Math.pow(v - mean, 2)
-        }).reduce((sum, error) => {
-            return utils.isNaN(error) ? sum : utils.isNaN(sum) ? error : error + sum
-        }, NaN)/(this.count() - ddof)
+        return stats.variance(this._values, {ddof:ddof})
     }
 
     /**
@@ -350,7 +345,7 @@ export default class Series{
      * @param {int} ddof 
      */
     std(ddof = 1){
-        return Math.sqrt(this.var(ddof))
+        return stats.std(this._values, { ddof })
     }
 
     /**
@@ -392,15 +387,9 @@ export default class Series{
 
     /**
      * Returns the maximum drawdown 
-     * 
-     * @param {*} field 
      */
-    mdd(field = "return"){
-        if(field == "return") return this.divide(this.cummax()).min() - 1
-        if(field == "valley") return this.iloc(this.divide(this.cummax()).idxmin())
-        if(field == "valley date") return this.index.at(this._values.indexOf(this.mdd("valley")))
-        if(field == "peak") return this.cummax().iloc(this.divide(this.cummax()).idxmin())
-        if(field == "peak date") return this.index.at(this._values.indexOf(this.mdd("peak")))
+    mdd(){
+        return stats.mdd(this._values)
     }
 
     /**
@@ -415,28 +404,28 @@ export default class Series{
      * Computes the numeric maximum
      */
     max(){
-        return this.reduce((prev, curr) => utils.isNaN(curr) ? prev : utils.isNaN(prev) ? curr : curr > prev ? curr : prev, NaN)
+        return stats.max(this._values)
     }
 
     /**
      * Computes the numeric minimum
      */
     min(){
-        return this.reduce((prev, curr) => utils.isNaN(curr) ? prev : utils.isNaN(prev) ? curr : curr < prev ? curr : prev, NaN)
+        return stats.min(this._values)
     }
 
     /**
      * Returns the index (0-based) of the max
      */
     idxmax(){
-        return utils.isNaN(this.max()) ? NaN : this._values.indexOf(this.max())
+        return stats.idxmax(this._values)
     }
 
     /**
      * Returns the index (0-based) of the minimum
      */
     idxmin(){
-        return utils.isNaN(this.min()) ? NaN : this._values.indexOf(this.min())
+        return stats.idxmin(this._values)
     }
 
     /**
@@ -1046,10 +1035,7 @@ export default class Series{
      * @param {*} options 
      */
     rank(options){
-        const sorted = this.sort(options)
-        const count  = (options && options.normalized) ? this.count() : 1
-        const values = this.index._values.map(idx => utils.isNA(this.loc(idx)) ? NaN : (sorted.index.indexOf(idx) + 1) / count)
-        return new Series(values, {index: this.index, name:this.name})
+        return new Series(stats.rank(this._values, options), {index: this.index, name:this.name})
     }
 
     /**
@@ -1057,10 +1043,8 @@ export default class Series{
      * 
      * @param {float} p 
      */
-    quantile(p){
-        const values = [...this._values].filter(v => !utils.isNaN(v)).sort(utils.defaultsort)
-        if(values.length == 0) return NaN
-        return values[Math.max(0, Math.round(p * values.length) - 1)]
+    quantile(q){
+        return stats.quantile(this._values, q)
     }
 
     /**

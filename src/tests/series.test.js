@@ -488,6 +488,9 @@ describe("ranking", () => {
     test("ranking in ascending order", () => {
         expect(s1.rank().values).toEqual([1,3,4,2])
     })
+    test("ranking in ascending order", () => {
+        expect(s1.rank({ascending:true}).values).toEqual([1,3,4,2])
+    })
     test("ranking in descending order", () => {
         expect(s1.rank({ascending:false}).values).toEqual([4,2,1,3])
     })

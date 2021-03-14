@@ -10,8 +10,8 @@ import mean       from './mean'
  */
 export default function variance(values, options){
     //degrees of freedom
-    const ddof = options && options.ddof ? options.ddof : 1 
-
+    const ddof = (!options || options.ddof === undefined) ? 1 : options.ddof
+    
     //count number of numeric values
     const n = count(values)
    

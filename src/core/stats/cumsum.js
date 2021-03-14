@@ -11,8 +11,12 @@ export default function(values){
             acc.push(i == 0 ? NaN : acc[-1])
         }
         else{
-            //NaN is never greater than
-            acc.push(acc[-1] < curr ? acc[-1] : curr)
+            if(i == 0 || utils.isNaN(acc[-1])){
+                acc.push(curr)
+            }
+            else{
+                acc.push(acc[-1] + curr)
+            }
         }
         return acc
     }, [])
