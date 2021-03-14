@@ -115,11 +115,7 @@ export default class Series{
      * @param {*} name the new name
      * @param {*} options options.inplace to change operation to inplace
      */
-    rename(name, options){
-        if(options && options.inplace){
-            this._name = name
-            return
-        }
+    rename(name){
         return new Series(this._values, {name:name, index:this.index})
     }
     /**
@@ -130,8 +126,11 @@ export default class Series{
      * @returns {*} return type depends on labels type
      */
     loc(labels){
-        if(utils.ismappable(labels)){
-            return new Series(labels.map(label => this.loc(label), {name:this.name, index:labels}))
+        if(utils.isIterable(labels) && !utils.isString(labels)){
+            return new Series(
+                labels.map(label => this.loc(label)), 
+                {name:this.name, index:labels}
+            )
         }
         return this._values[this.index.indexOf(labels)]
     }
@@ -142,8 +141,11 @@ export default class Series{
      * @returns {*} the value at the provided position
      */
     iloc(indices){
-        if(utils.ismappable(indices)){
-            return new Series(indices.map(i => this.iloc(i)), {name:this.name, index:indices.map(i => this.index.at(i))})
+        if(utils.isIterable(indices) && !utils.isString(indices)){
+            return new Series(
+                [...indices].map(i => this.iloc(i)), 
+                {name:this.name, index:[...indices].map(i => this.index.at(i))}
+            )
         }
         if(indices >= this.length || (this.length + indices) < 0){
             throw new Error('Out of bounds error')
@@ -614,7 +616,7 @@ export default class Series{
                 }
                 return this.map((value, i) => callback(value, other.iloc(i), i))
             }
-            const index  = this.index.union(other.index).sort(utils.defaultsort)
+            const index  = this.index.union(other.index)
             const values = index.values.map(idx => {
                 return this.index.has(idx) && other.index.has(idx) ? callback(this.loc(idx), other.loc(idx)) : NaN
             })
@@ -994,6 +996,9 @@ export default class Series{
      * @param {*} options 
      */
     asof(label){
+        if(this.length == 0){
+            throw new Error("series is empty")
+        }
         return this._values[this.index.loc(this.index.asof(label))]
     }
 
@@ -1093,7 +1098,7 @@ export default class Series{
      * @returns grouper
      */
     groupby(groups, options){
-        const grouper = new Grouper(options)
+        const grouper = new Grouper(this, options)
 
         if(!groups){
             throw new Error("Groupby called incorrectly")
@@ -1205,7 +1210,7 @@ export default class Series{
      * @param {*} options 
      */
     pivot(options){
-        const grouper = new Pivot(options)
+        const grouper = new Pivot(this, options)
 
         //force index and columns to lists
         if(typeof options.index === "function"){

@@ -5,8 +5,12 @@ import * as utils from './utils'
 import * as stats from './stats'
 
 class BaseGrouper{
-    constructor(options){
+    constructor(underlying, options){
+        this.underlying = underlying
         this.options = options
+    }
+    apply(callback, options){
+        throw new Error("not implemented")
     }
     first(){
         return this.apply(srs => srs[0], {raw:true})
@@ -50,18 +54,13 @@ class BaseGrouper{
 }
 
 export class Grouper extends BaseGrouper{
-    constructor(options){
-        super(options)
+    constructor(underlying, options){
+        super(underlying, options)
         this.groups = new Map()
     }
     get index(){
         const index = new Index(this.groups.keys())
-        try{
-            return index.sort()
-        }
-        catch(e){
-            return index
-        }
+        return index.sortable ? index.sort() : index
     }
     add(group, index, value){
         if(!this.groups.has(group)) this.groups.set(group, [[],[]])
@@ -76,13 +75,13 @@ export class Grouper extends BaseGrouper{
             }
             return callback(new Series(this.groups.get(key)[1], {index:this.groups.get(key)[0], name:key}))
         })
-        return new Series(values, {index:this.groups.keys()})
+        return new Series(values, {name:this.underlying.name, index:this.groups.keys()})
     }
 }
 
 export class Pivot extends BaseGrouper{
-    constructor(options){
-        super(options)
+    constructor(underlying, options){
+        super(underlying, options)
         this.mapping = new Map()
     }
     add(index, column, key, value){
@@ -137,10 +136,6 @@ export class Pivot extends BaseGrouper{
 }
 
 export class Rolling extends BaseGrouper{
-    constructor(underlying, options){
-        super(options)
-        this.underlying = underlying
-    }
     apply(callback, options){
         const values = []
         for(let i = 0; i < this.underlying.length; i++){
