@@ -536,14 +536,14 @@ export default class Series{
      * Returns the cumulative sum
      */
     cumsum(){
-        return this.accumulate((prev, curr) => utils.isNaN(curr) ? prev : utils.isNaN(prev) ? curr : prev + curr)
+        return new Series(stats.cumsum(this._values), {index:this.index, name:this.name})
     }
     
     /**
      * Returns the cumulative product
      */
     cumprod(){
-        return this.accumulate((prev, curr) => utils.isNaN(curr) ? prev : utils.isNaN(prev) ? curr : prev * curr)
+        return new Series(stats.cumprod(this._values), {index:this.index, name:this.name})
     }
 
     /**
@@ -557,14 +557,14 @@ export default class Series{
      * Returns the cumulative maximum
      */
     cummax(){
-        return this.accumulate((prev, curr) => utils.isNaN(curr) ? prev : utils.isNaN(prev) ? curr : curr > prev ? curr : prev)
+        return new Series(stats.cummax(this._values), {index:this.index, name:this.name})
     }
 
     /**
      * Returns the cumulative minimum
      */
     cummin(){
-        return this.accumulate((prev, curr) => utils.isNaN(curr) ? prev : utils.isNaN(prev) ? curr : curr < prev ? curr : prev)
+        return new Series(stats.cummin(this._values), {index:this.index, name:this.name})
     }
 
     /**

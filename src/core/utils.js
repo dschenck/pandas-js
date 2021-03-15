@@ -191,43 +191,6 @@ export function transpose(values){
 }
 
 /**
- * Returns true is all values are truthy
- * 
- * @param strict
- * @returns {bool}
- */
-export function all(values, strict=false){
-    for(let i = 0, len = values.length; i < len; i++){
-        if(strict){
-            if(values[i] !== true){
-                return false
-            }
-        }
-        if(values[i] != true){
-            return false
-        }
-    }
-    return true
-}
-
-/**
- * Returns true if any value is true
- */
-export function any(values, strict=false){
-    for(let i = 0, len = values.length; i < length; i++){
-        if(strict){
-            if(values[i] === true){
-                return true
-            }
-        }
-        if(values[i] == true){
-            return true
-        }
-    }
-    return false
-}
-
-/**
  * Sorting function between two values
  */
 export function defaultsort(a, b, options){

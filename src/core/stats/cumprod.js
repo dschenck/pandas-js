@@ -1,7 +1,7 @@
 import * as utils from '../utils'
 
 /**
- * Returns the cumulative min of the given array
+ * Returns the cumulative product of the given array
  * 
  * @param {*} values 
  */
@@ -11,8 +11,7 @@ export default function(values){
             acc.push(i == 0 ? NaN : acc[i-1])
         }
         else{
-            //NaN and undefined are never less than
-            acc.push(acc[i-1] < curr ? acc[i-1] : curr)
+            acc.push(utils.isNaN(acc[i-1]) ? curr : acc[i-1] * curr)
         }
         return acc
     }, [])

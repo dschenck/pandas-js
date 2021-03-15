@@ -5,6 +5,7 @@ import count    from './count'
 import covar    from './covar'
 import cummax   from './cummax'
 import cummin   from './cummin' 
+import cumprod  from './cumprod'
 import cumsum   from './cumsum'
 import idxmin   from './idxmin'
 import idxmax   from './idxmax'
@@ -27,6 +28,7 @@ export default {
     covar,
     cummax,
     cummin,
+    cumprod,
     cumsum,
     idxmin, 
     idxmax,

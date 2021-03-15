@@ -1,6 +1,6 @@
-import { Index }     from '../core/Index'
-import { Series }    from '../core/Series'
-import { DataFrame } from '../core/DataFrame'
+import Index     from '../core/Index'
+import Series    from '../core/Series'
+import DataFrame from '../core/DataFrame'
 import * as utils    from '../core/utils'
 
 describe("instanciation", () => {
