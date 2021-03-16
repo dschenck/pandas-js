@@ -1069,7 +1069,7 @@ export default class Series{
             }
             return new SeriesGroupby(this, {...options, grouper:(groups => {
                 return (value, i) => groups[i]
-            })([...groups])})
+            })([...by])})
         }
         throw new Error("Series.groupby called incorrectly")
     }
