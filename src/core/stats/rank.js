@@ -9,7 +9,7 @@ import * as utils from '../utils'
  * @param {*} options 
  */
 export default function(values, options){
-    const mapping = [...values].filter(v => {
+    const mapping = values.filter(v => {
         return !utils.isNaN(v)
     }).sort((a, b) => {
         return a - b
