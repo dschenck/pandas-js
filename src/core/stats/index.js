@@ -7,8 +7,12 @@ import cummax   from './cummax'
 import cummin   from './cummin' 
 import cumprod  from './cumprod'
 import cumsum   from './cumsum'
+import first    from './first'
+import idxfirst from './idxfirst'
+import idxlast  from './idxlast'
 import idxmin   from './idxmin'
 import idxmax   from './idxmax'
+import last     from './last'
 import max      from './max'
 import mean     from './mean'
 import mdd      from './mdd'
@@ -30,8 +34,12 @@ export default {
     cummin,
     cumprod,
     cumsum,
+    first,
+    idxfirst, 
+    idxlast,
     idxmin, 
     idxmax,
+    last,
     max,
     mdd,
     mean,

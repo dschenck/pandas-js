@@ -431,49 +431,29 @@ export default class Series{
     /**
      * Returns the first numeric (or non-missing) value
      */
-    first(skipnan = true){
-        for(let i = 0; i < this.length; i++){
-            if(!(skipnan ? utils.isNaN(this._values[i]) : utils.isNA(this._values[i]))){
-                return this._values[i]
-            }
-        }
-        return NaN
+    first(options){
+        return stats.first(this._values, options)
     }
 
     /**
      * Returns the index of the first numeric (or non-missing value)
      */
-    idxfirst(skipnan = true){
-        for(let i = 0; i < this.length; i++){
-            if(!(skipnan ? utils.isNaN(this._values[i]) : utils.isNA(this._values[i]))){
-                return i
-            }
-        }
-        return NaN
+    idxfirst(options){
+        return stats.idxfirst(this._values, options)
     }
 
     /**
      * Returns the first numeric (or non-missing) value
      */
-    last(skipnan = true){
-        for(let i = this.length - 1 ; i >= 0; i--){
-            if(!(skipnan ? utils.isNaN(this._values[i]) : utils.isNA(this._values[i]))){
-                return this._values[i]
-            }
-        }
-        return NaN
+    last(options){
+        return stats.last(this._values, options)
     }
     
     /**
      * Returns the index of the last numeric (or non-missing) value
      */
-    idxlast(skipnan = true){
-        for(let i = this.length - 1 ; i >= 0; i--){
-            if(!(skipnan ? utils.isNaN(this._values[i]) : utils.isNA(this._values[i]))){
-                return i
-            }
-        }
-        return NaN
+    idxlast(options){
+        return stats.idxlast(this._values, options)
     }
 
     /**
