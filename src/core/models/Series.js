@@ -1,8 +1,8 @@
+import datetime      from '../libs/datetime'
+import * as utils    from '../utils'
+import stats         from '../stats'
 import Index         from './Index'
 import { SeriesGroupby, Pivot, Rolling } from './Grouper'
-import datetime      from './libs/datetime'
-import * as utils    from './utils'
-import stats         from './stats'
 
 export default class Series{
     constructor(data, options){

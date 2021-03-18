@@ -1,5 +1,5 @@
-import Series      from '../core/Series'
-import { SeriesGroupby, Pivot } from '../core/Grouper'
+import Series      from '../../core/models/Series'
+import { SeriesGroupby, Pivot } from '../../core/models/Grouper'
 
 describe("instanciation", () =>{
     let grouper = (new Series([1,2,3,4,5,6,7,8,9,1,2,3,4,5,6,7,8,9])).groupby(v => v >= 5)

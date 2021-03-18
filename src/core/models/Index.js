@@ -1,7 +1,7 @@
-import datetime   from './libs/datetime'
-import bisect     from './libs/bisect' 
-import * as utils from './utils'
-import stats      from './stats'
+import datetime   from '../libs/datetime'
+import bisect     from '../libs/bisect' 
+import * as utils from '../utils'
+import stats      from '../stats'
 import Series     from './Series'
 
 export default class Index{ 

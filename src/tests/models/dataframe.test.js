@@ -1,7 +1,7 @@
-import Index     from '../core/Index'
-import Series    from '../core/Series'
-import DataFrame from '../core/DataFrame'
-import * as utils    from '../core/utils'
+import * as utils from '../../core/utils'
+import Index      from '../../core/models/Index'
+import Series     from '../../core/models/Series'
+import DataFrame  from '../../core/models/DataFrame'
 
 describe("instanciation", () => {
     const df1 = new DataFrame([[1,2,3],[4,5,6]])

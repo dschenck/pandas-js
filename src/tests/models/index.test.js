@@ -1,6 +1,6 @@
-import Index  from '../core/Index'
-import Series from '../core/Series'
-import * as utils from '../core/utils'
+import * as utils from '../../core/utils'
+import Index      from '../../core/models/Index'
+import Series     from '../../core/models/Series'
 
 let idx0 = new Index()
 let idx1 = new Index(["A","B","C","D","E","F"], {name:"letters"})

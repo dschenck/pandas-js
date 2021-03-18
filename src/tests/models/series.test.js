@@ -1,6 +1,6 @@
-import Series     from '../core/Series'
-import Index      from '../core/Index'
-import * as utils from '../core/utils'
+import * as utils from '../../core/utils'
+import Series     from '../../core/models/Series'
+import Index      from '../../core/models/Index'
 
 let s1 = new Series([0,1,2,3,4,5,6,7], {name:'integers', index:["A","B","C","D","E","F","G","H"]})
 
