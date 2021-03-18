@@ -7,7 +7,7 @@ import * as utils from '../utils'
  * @param {*} options 
  */
 export default function count(values, options){
-    if(!options || options.skipnan){
+    if(options && options.skipnan){
         return values.reduce((prev, curr) => {
             return utils.isNaN(curr) ? prev : prev + 1
         }, 0)
