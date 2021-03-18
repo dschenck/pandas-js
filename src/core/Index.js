@@ -1,6 +1,7 @@
 import datetime   from './libs/datetime'
 import bisect     from './libs/bisect' 
 import * as utils from './utils'
+import stats      from './stats'
 import Series     from './Series'
 
 export default class Index{ 
@@ -371,7 +372,7 @@ export default class Index{
         if(!this.sortable){
             throw new Error("Cannot compute max on non-sortable index")
         }
-        return this._values.reduce((prev, curr) => prev > curr ? prev : curr, undefined)
+        return stats.max(this._values)
     }
 
     /**
@@ -384,7 +385,7 @@ export default class Index{
         if(!this.sortable){
             throw new Error("Cannot compute min on non-sortable index")
         }
-        return this._values.reduce((prev, curr) => prev < curr ? prev : curr, undefined)
+        return stats.min(this._values)
     }
 
     /**
