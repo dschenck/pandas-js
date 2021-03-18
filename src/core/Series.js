@@ -418,14 +418,16 @@ export default class Series{
      * Returns the index (0-based) of the max
      */
     idxmax(){
-        return stats.idxmax(this._values)
+        const idx = stats.idxmax(this._values)
+        return utils.isNaN(idx) ? NaN : this.index.at(idx)
     }
 
     /**
      * Returns the index (0-based) of the minimum
      */
     idxmin(){
-        return stats.idxmin(this._values)
+        const idx = stats.idxmin(this._values)
+        return utils.isNaN(idx) ? NaN : this.index.at(idx)
     }
 
     /**
@@ -439,7 +441,8 @@ export default class Series{
      * Returns the index of the first numeric (or non-missing value)
      */
     idxfirst(options){
-        return stats.idxfirst(this._values, options)
+        const idx = stats.idxfirst(this._values, options)
+        return utils.isNaN(idx) ? NaN : this.index.at(idx)
     }
 
     /**
@@ -453,7 +456,8 @@ export default class Series{
      * Returns the index of the last numeric (or non-missing) value
      */
     idxlast(options){
-        return stats.idxlast(this._values, options)
+        const idx = stats.idxlast(this._values, options)
+        return utils.isNaN(idx) ? NaN : this.index.at(idx)
     }
 
     /**
