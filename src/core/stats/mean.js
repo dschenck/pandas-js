@@ -6,6 +6,6 @@ import sum   from './sum'
  * @param {*} values 
  */
 export default function mean(values){
-    const n = count(values)
+    const n = count(values, {skipnan:true})
     return n == 0 ? NaN : sum(values)/n
 }

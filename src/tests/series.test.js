@@ -115,23 +115,27 @@ describe("first and last", () => {
     let s = new Series([NaN, "A", 1, 0, 10, 20, "B", undefined])
 
     test("first", () => {
-        expect(s.first()).toBe(1)
-        expect(s.first(false)).toBe("A")
+        expect(s.first({skipnan:true})).toBe(1)
+        expect(s.first({skipnan:false})).toBe("A")
+        expect(s.first()).toBe("A")
     })
 
     test("last", () => {
-        expect(s.last()).toBe(20)
-        expect(s.last(false)).toBe("B")
+        expect(s.last({skipnan:true})).toBe(20)
+        expect(s.last({skipnan:false})).toBe("B")
+        expect(s.last()).toBe("B")
     })
 
     test("first index", () => {
-        expect(s.idxfirst()).toBe(2)
-        expect(s.idxfirst(false)).toBe(1)
+        expect(s.idxfirst({skipnan:true})).toBe(2)
+        expect(s.idxfirst({skipnan:false})).toBe(1)
+        expect(s.idxfirst()).toBe(1)
     })
 
     test("last index", () => {
-        expect(s.idxlast()).toBe(5)
-        expect(s.idxlast(false)).toBe(6)
+        expect(s.idxlast({skipnan:true})).toBe(5)
+        expect(s.idxlast({skipnan:false})).toBe(6)
+        expect(s.idxlast()).toBe(6)
     })
 })
 
@@ -191,12 +195,15 @@ describe('descriptive statistics', () => {
 
         let s2 = new Series([0,1,2,3,NaN,"A"])
         expect(s2.sum()).toBe(6)
-        expect(s2.count()).toBe(4)
-        expect(s2.count(false)).toBe(5)
+        expect(s2.count({skipnan:true})).toBe(4)
+        expect(s2.count({skipnan:false})).toBe(5)
+        expect(s2.count()).toBe(5)
 
         let s3 = new Series(["A", 1, 2.5, true, false, NaN, undefined, Infinity, -Infinity, null])
         expect(s3.sum()).toBe(4.5)
-        expect(s3.count()).toBe(4)
+        expect(s3.count({skipnan:true})).toBe(4)
+        expect(s3.count({skipnan:false})).toBe(5)
+        expect(s3.count()).toBe(5)
         expect(s3.mean()).toBe(1.125)
     })
 
