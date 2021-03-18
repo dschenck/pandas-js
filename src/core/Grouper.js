@@ -12,32 +12,38 @@ class BaseGrouper{
     apply(callback, options){
         throw new Error("not implemented")
     }
-    first(){
-        return this.apply(srs => srs[0], {raw:true})
+    first(options){
+        return this.apply(srs => stats.first(srs, options), {raw:true})
     }
-    last(){
-        return this.apply(srs => srs[srs.length - 1], {raw:true})
+    last(options){
+        return this.apply(srs => stats.last(srs, options), {raw:true})
+    }
+    idxfirst(options){
+        return this.apply(srs => srs.idxfirst(options))
+    }
+    idxlast(options){
+        return this.apply(srs => srs.idxlast(options))
     }
     min(){
-        return this.apply(srs => srs.min())
+        return this.apply(srs => stats.min(srs), {raw:true})
     }
     max(){
-        return this.apply(srs => srs.max())
+        return this.apply(srs => stats.max(srs), {raw:true})
     }
-    count(skipnan = true){
-        return this.apply(srs => srs.count(skipnan))
+    count(options){
+        return this.apply(srs => stats.count(srs, options), {raw:true})
     }
     sum(){
-        return this.apply(srs => srs.sum())
+        return this.apply(srs => stats.sum(srs), {raw:true})
     }
     mean(){
-        return this.apply(srs => srs.mean())
+        return this.apply(srs => stats.mean(srs), {raw:true})
     }
-    std(){
-        return this.apply(srs => srs.std())
+    std(options){
+        return this.apply(srs => stats.std(srs, options), {raw:true})
     }
-    var(){
-        return this.apply(srs => srs.var())
+    var(options){
+        return this.apply(srs => stats.variance(srs, options), {raw:true})
     }
     idxmin(){
         return this.apply(srs => srs.idxmin())
@@ -46,10 +52,10 @@ class BaseGrouper{
         return this.apply(srs => srs.idxmax())
     }
     all(){
-        return this.apply(srs => srs.all())
+        return this.apply(srs => stats.all(srs), {raw:true})
     }
     any(){
-        return this.apply(srs => srs.any())
+        return this.apply(srs => stats.all(srs), {raw:true})
     }
 }
 
@@ -178,11 +184,5 @@ export class Rolling extends BaseGrouper{
             }
         }
         return new Series(values, {index:this.underlying.index, name:this.underlying.name})
-    }
-    sum(){
-        return this.apply(values => stats.sum(values), {raw:true})
-    }
-    std(){
-        return this.apply(values => stats.std(values), {raw:true})
     }
 }
