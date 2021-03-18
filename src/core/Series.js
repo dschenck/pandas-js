@@ -317,8 +317,8 @@ export default class Series{
      * @param {boolean} [skipnan=true] whether to count only numeric values
      * @returns {number}
      */
-    count(skipnan = true){        
-        return stats.count(this._values, {skipnan})
+    count(options){        
+        return stats.count(this._values, options)
     }
 
     /**

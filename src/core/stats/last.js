@@ -7,7 +7,7 @@ import * as utils from '../utils'
  * @param {*} options 
  */
 export default function last(values, options){
-    if(options && options.numeric){
+    if(options && options.skipnan){
         for(let i = values.length; i > 0; i--){
             if(!utils.isNaN(values[i-1])){
                 return values[i-1]
