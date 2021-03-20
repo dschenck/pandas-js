@@ -4,47 +4,119 @@ import Series     from '../../core/models/Series'
 import DataFrame  from '../../core/models/DataFrame'
 
 describe("instanciation", () => {
-    const df1 = new DataFrame([[1,2,3],[4,5,6]])
-
-    test("instance of", () => {
+    test("base case", () => {
+        const df1 = new DataFrame([[1,2,3],[4,5,6]])
         expect(df1).toBeInstanceOf(DataFrame)
-    })
-
-    test("shape", () => {
         expect(df1.shape).toEqual([2,3])
-    })
-
-    test("indices", () => {
+        expect(df1.values).toEqual([[1,2,3],[4,5,6]])
         expect(df1.index).toBeInstanceOf(Index)
+        expect(df1.index.length).toEqual(2)
         expect(df1.columns).toBeInstanceOf(Index)
+        expect(df1.columns.length).toEqual(3)
     })
 
-    test("instanciation from another dataframe", () => {
-        expect(new DataFrame(df1)).toBeInstanceOf(DataFrame)
-        expect((new DataFrame(df1)).values).toEqual(df1.values)
+    test("list of series", () => {
+        const s1 = new Series([1,2,3])
+        const s2 = new Series([4,5,6])
+        const df1 = new DataFrame([s1, s2])
+        expect(df1.values).toEqual([[1,2,3],[4,5,6]])
+        expect(df1.index.values).toEqual([0,1])
+        expect(df1.columns.values).toEqual([0,1,2])
+
+        const s3 = new Series([7,8,9], {index:["A","B","C"], name:"X"})
+        const df2 = new DataFrame([s1,s3])
+        expect(df2.index.values).toEqual([0,"X"])
+        expect(df2.columns.values).toEqual([0,1,2,"A","B","C"])
+        expect(df2.values).toEqual([[1,2,3,NaN,NaN,NaN],[NaN,NaN,NaN,7,8,9]])
+    })
+    
+    test("empty dataframe", () => {
+        const df1 = new DataFrame()
+        expect(df1).toBeInstanceOf(DataFrame)
+        expect(df1.shape).toEqual([0,0])
+        expect(df1.values).toEqual([])
+        expect(df1.index).toBeInstanceOf(Index)
+        expect(df1.index.length).toEqual(0)
+        expect(df1.columns).toBeInstanceOf(Index)
+        expect(df1.columns.length).toEqual(0)
+
+        const df2 = new DataFrame([])
+        expect(df2).toBeInstanceOf(DataFrame)
+        expect(df2.shape).toEqual([0,0])
+        expect(df2.values).toEqual([])
+        expect(df2.index).toBeInstanceOf(Index)
+        expect(df2.index.length).toEqual(0)
+        expect(df2.columns).toBeInstanceOf(Index)
+        expect(df2.columns.length).toEqual(0)
     })
 
-    test("instanciation from a series", () => {
-        const df2 = new DataFrame(new Series([1,2,3,4,5], {name:"df2"}))
-        
-        expect(df2.shape).toEqual([5,1])
-        expect(df2.index.values).toEqual([0,1,2,3,4])
-        expect(df2.columns.values).toEqual(["df2"])
+    test("from another dataframe", () => {
+        const df1 = new DataFrame([[1,2,3],[4,5,6]])
+        const df2 = new DataFrame(df1)
+        expect(df2).toBeInstanceOf(DataFrame)
+        expect(df2.values).toEqual(df1.values)
     })
 
-    test("empty dataframe with indices", () => {
-        const df3 = new DataFrame(undefined, {index:utils.range(10),columns:utils.range(5)})
+    test("from a Series", () => {
+        const df1 = new DataFrame(new Series([1,2,3,4], {name:"test"}))
+        expect(df1.shape).toEqual([4,1])
+        expect(df1.values).toEqual([[1],[2],[3],[4]])
+        expect(df1.index.values).toEqual([0,1,2,3])
+        expect(df1.columns.values).toEqual(["test"])
 
-        expect(df3.shape).toEqual([10,5])
-        expect(df3.iloc({row:0,column:0})).toEqual(NaN)
+        const df2 = new DataFrame(new Series([1,2,3,4], {name:"test", index:["A","B","C","D"]}))
+        expect(df2.index.values).toEqual(["A","B","C","D"])
+        expect(df2.columns.values).toEqual(["test"])
     })
 
-    test("instanciation with indices", () =>{
-        const df4 = new DataFrame([["A1","B1","C1"],["A2","B2","C2"],["A3","B3","C3"]], 
-                                    {index:["1","2","3"], columns:["A","B","C"]})
-        
-        expect(df4.columns.values).toEqual(["A","B","C"])
-        expect(df4.index.values).toEqual(["1","2","3"])
+    test("from a single list", () => {
+        const df1 = new DataFrame([1,2,3,4])
+        expect(df1.shape).toEqual([4,1])
+        expect(df1.values).toEqual([[1],[2],[3],[4]])
+        expect(df1.index.values).toEqual([0,1,2,3])
+        expect(df1.columns.values).toEqual([0])
+    })
+
+    test("from a single list with index", () => {
+        const df1 = new DataFrame([1,2,3,4], {index:["A","B","C","D"]})
+        expect(df1.shape).toEqual([4,1])
+        expect(df1.values).toEqual([[1],[2],[3],[4]])
+        expect(df1.index.values).toEqual(["A","B","C","D"])
+        expect(df1.columns.values).toEqual([0])
+
+        const df2 = new DataFrame([1,2,3,4], {columns:["A"]})
+        expect(df2.shape).toEqual([4,1])
+        expect(df2.values).toEqual([[1],[2],[3],[4]])
+        expect(df2.index.values).toEqual([0,1,2,3])
+        expect(df2.columns.values).toEqual(["A"])
+
+        const df3 = new DataFrame([1,2,3,4], {index:["A","B","C","D"], columns:["X"]})
+        expect(df3.shape).toEqual([4,1])
+        expect(df3.values).toEqual([[1],[2],[3],[4]])
+        expect(df3.index.values).toEqual(["A","B","C","D"])
+        expect(df3.columns.values).toEqual(["X"])
+    })
+
+    test("sparse dataframe", () => {
+        const df1 = new DataFrame(undefined, {index:utils.range(10),columns:utils.range(5)})
+        expect(df1.shape).toEqual([10,5])
+        expect(df1.values).toEqual(utils.range(10).map(r => utils.range(5).map(v => NaN)))
+    })
+
+    test("constant value", () => {
+        const df1 = new DataFrame(7.5, {index:utils.range(10),columns:utils.range(5)})
+        expect(df1.shape).toEqual([10,5])
+        expect(df1.values).toEqual(utils.range(10).map(r => utils.range(5).map(v => 7.5)))
+    })
+
+    test("invalid constructors", () => {
+        expect(() => new DataFrame(10, {index:utils.range(10)})).toThrow(Error)
+        expect(() => new DataFrame(10, {columns:utils.range(10)})).toThrow(Error)
+    })
+
+    test("length mismatch", () => {
+        expect(() => new DataFrame([[1,2,3]], {index:[0,1,2,3,4]})).toThrow(Error)
+        expect(() => new DataFrame([[1,2,3]], {columns:["A","B"]})).toThrow(Error)
     })
 })
 

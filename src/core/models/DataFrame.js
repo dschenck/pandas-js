@@ -5,51 +5,82 @@ import Series     from './Series'
 
 export default class DataFrame{
     constructor(data, options){
-        if(data === undefined){
-            if(!(options && options.index && options.columns)){
-                throw new Error("Constructor called incorrectly")
-            }
-            this._values = [...options.index].map(r => [...options.columns].map(c => NaN))
-        }
-        else if(data instanceof DataFrame){
-            this._values = data.values
-            this.index   = data.index
-            this.columns = data.columns 
+        if(data instanceof DataFrame){
+            this._values  = data.values
+            this._index   = data.index
+            this._columns = data.columns
         }
         else if(data instanceof Series){
-            this._values = data._values.map(v => [v])
-            this.index   = data.index
-            this.columns = data.name !== undefined ? new Index([data.name]) : new Index([0])
+            this._values  = data._values.map(v => [v])
+            this._index   = data.index
+            this._columns = data.name !== undefined ? new Index([data.name]) : new Index([0])
         }
-        else if(utils.isIterable(data)){
-            if(utils.isListOfList(data)){
-                this._values = [...data].map(row => [...row])
+        else if(data instanceof Index){
+            this._values  = data._values.map(v => [v])
+            this._index   = data
+            this._columns = data.name !== undefined ? new Index([data.name]) : new Index([0])
+        }
+        else if(utils.isMatrix(data)){
+            this._values  = data.length == 0 ? [] : data.map(row => [...row])
+            this._index   = new Index(utils.range(data.length))
+            this._columns = data.length > 0 ? new Index(utils.range(data[0].length)) : new Index()
+        }
+        else if(Array.isArray(data) && data.every(item => item instanceof Series)){
+            this._index   = new Index(data.map((srs, i) => srs.name || i))
+            this._columns = Index.union(data.map(srs => srs.index))
+            this._values  = data.map(srs => {
+                return this._columns.values.map(c => srs.index.has(c) ? srs.loc(c) : NaN)
+            })
+        }
+        else if(Array.isArray(data)){
+            this._values  = data.map(v => [v])
+            this._index   = new Index(utils.range(data.length))
+            this._columns = new Index(data.length > 0 ? [0]: [])
+        }
+        else if(data === undefined || data != data || data == null){
+            if(options){
+                if(options.index && options.columns){
+                    this._values = utils.range(options.index.length).map(r => {
+                        return utils.range(options.columns.length).map(v => NaN)
+                    })
+                }
+                this._index   = new Index(options.index)
+                this._columns = new Index(options.columns)
             }
             else{
-                throw new Error("Unsupported data type")
+                this._values  = []
+                this._index   = new Index()
+                this._columns = new Index()
+            }
+        }
+        else if(utils.isPrimitive(data)){
+            if(options && options.index && options.columns){
+                this._values = utils.range(options.index.length).map(r => {
+                    return utils.range(options.columns.length).map(v => utils.isNA(data) ? NaN : data)
+                })
+                this._index   = new Index(options.index)
+                this._columns = new Index(options.columns)
+            }
+            else{
+                throw new Error("Constructor not called properly")
             }
         }
         else{ 
             throw new Error("Constructor not called properly")
         }
+
         if(options && options.index){
             this.index = options.index
         }
-        else if(this._index === undefined){
-            this.index = utils.range(this.shape[0])
-        }
         if(options && options.columns){
             this.columns = options.columns
-        }
-        else if(this._columns === undefined){
-            this.columns = utils.range(this.shape[1])
         }
     }
     /**
      * Returns a tuple of number of rows, number of columns
      */
     get shape(){
-        return [this._values.length, this.values[0].length]
+        return [this.index.length, this.columns.length]
     }
     /**
      * Returns the index
@@ -66,12 +97,14 @@ export default class DataFrame{
         }
         this._index = new Index(index)
     }
+
     /**
      * Returns the columns index
      */
     get columns(){
         return this._columns
     }
+
     /**
      * Sets the columns index
      */
@@ -81,12 +114,15 @@ export default class DataFrame{
         }
         this._columns = new Index(index)
     }
+
     /**
      * Get the dataframe values as a list of list
      */
     get values(){
+        if(this.shape[0] == 0) return []
         return this._values.map(row => [...row])
     }
+
     /**
      * Retrieve data by label(s)
      * @param {*} options 
@@ -274,9 +310,9 @@ export default class DataFrame{
      */
     count(options){
         if(options && options.axis == 1){
-            return new Series(this._values.map(row => stats.count(row), {index:this.index, name:"count"}))
+            return new Series(this._values.map(row => stats.count(row, options), {index:this.index, name:"count"}))
         }
-        return this.transpose().count({axis:1})
+        return this.transpose().count({...options, axis:1})
     }
     /**
      * Returns the smallest value across an axis
