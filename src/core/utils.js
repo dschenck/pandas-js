@@ -143,9 +143,21 @@ export function isListOfList(value){
                 return false
             }
         }
+        return true
     }
-    return true
+    return false
 }
+
+/**
+ * Checks wether value is a list of list 
+ * with the length of each equal to each other
+ * 
+ * @param {*} value 
+ */
+export function isMatrix(value){
+    return isListOfList(value) && (value.length == 0 || value.every(item => item.length == value[0].length))
+}
+
 
 /**
  * Checks whether a value is a list of records

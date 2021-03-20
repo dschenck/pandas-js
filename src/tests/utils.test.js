@@ -80,8 +80,29 @@ describe('test isListOfList', () => {
     test('list of values', () => {
         expect(utils.isListOfList([[1,2],[3,4]])).toBe(true)
     })
+    test("not a list", () => {
+        expect(utils.isListOfList(10)).toBe(false)
+    })
+    test("mixed list", () => {
+        expect(utils.isListOfList([[1,2,3],"X"])).toBe(false)
+    })
     test('list of values', () => {
         expect(utils.isListOfList([1,2,3,4,5])).toBe(false)
+    })
+})
+
+describe('isMatrix', () => {
+    test('base case', () => {
+        expect(utils.isMatrix([[1,2],[3,4]])).toBe(true)
+    })
+    test('empty list', () => {
+        expect(utils.isMatrix([])).toBe(true)
+    })
+    test("irregular list of list", () => {
+        expect(utils.isMatrix([[1,2],[3,4,5]])).toBe(false)
+    })
+    test("vector", () => {
+        expect(utils.isMatrix([1,2,3])).toBe(false)
     })
 })
 
