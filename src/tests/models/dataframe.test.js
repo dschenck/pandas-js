@@ -120,6 +120,39 @@ describe("instanciation", () => {
     })
 })
 
+describe("rename labels", () => {
+    const df1 = new DataFrame(
+        [["A1","B1","C1"],["A2","B2","C2"],["A3","B3","C3"]], 
+        {index:["1","2","3"], columns:["A","B","C"]}
+    )
+
+    test("index axis", () => {
+        expect(df1.rename({"1":"0"}).index.values).toEqual(["0","2","3"])
+        expect(df1.rename({"1":"0"}, {axis:0}).index.values).toEqual(["0","2","3"])
+        expect(df1.rename({"1":"0"}).values).toEqual(df1.values)
+    })
+
+    test("columns axis", () => {
+        expect(df1.rename({"A":"X"}, {axis:1}).columns.values).toEqual(["X","B","C"])
+        expect(df1.rename({"A":"X"}, {axis:1}).index.values).toEqual(["1","2","3"])
+        expect(df1.rename({"A":"X"}, {axis:1}).values).toEqual(df1.values)
+    })
+
+    test("renaming with function", () => {
+        expect(df1.rename(v => 10 * Number(v)).index.values).toEqual([10,20,30])
+        expect(df1.rename(v => 10 * Number(v), {axis:0}).index.values).toEqual([10,20,30])
+        expect(df1.rename(v => `H${v}`, {axis:1}).columns.values).toEqual(["HA","HB","HC"])
+    })
+
+    test("renaming with array", () => {
+        expect(df1.rename([10,20,30]).index.values).toEqual([10,20,30])
+    })
+
+    test("renaming with object mapping", () => {
+        expect(df1.rename({"A":"X"}, {axis:1}).columns.values).toEqual(["X","B","C"])
+    })
+})
+
 describe("accessing data via label", () => {
     const df1 = new DataFrame([["A1","B1","C1"],["A2","B2","C2"],["A3","B3","C3"]], 
                         {index:["1","2","3"], columns:["A","B","C"]})

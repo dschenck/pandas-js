@@ -76,18 +76,21 @@ export default class DataFrame{
             this.columns = options.columns
         }
     }
+
     /**
      * Returns a tuple of number of rows, number of columns
      */
     get shape(){
         return [this.index.length, this.columns.length]
     }
+
     /**
      * Returns the index
      */
     get index(){
         return this._index
     }
+
     /**
      * Sets a new index
      */
@@ -121,6 +124,37 @@ export default class DataFrame{
     get values(){
         if(this.shape[0] == 0) return []
         return this._values.map(row => [...row])
+    }
+
+    /**
+     * Renames index labels
+     * 
+     * @param {*} labels array || function || Map || object
+     * @param {*} options object
+     */
+    rename(labels, options){
+        if(options && options.axis == 1){
+            if(Array.isArray(labels)){
+                return new DataFrame(this, {index:this.index, columns:labels})
+            }
+            if(typeof labels == "function"){
+                return new DataFrame(this, {index:this.index, columns:this.columns.map(labels)})
+            }
+            if(labels instanceof Map){
+                return new DataFrame(this, {index:this.index, columns:this.columns.map(v => labels.has(v) ? labels.get(v) : v)})
+            }
+            return new DataFrame(this, {index:this.index, columns:this.columns.map(v => v in labels ? labels[v] : v)})
+        }
+        if(Array.isArray(labels)){
+            return new DataFrame(this, {index:labels, columns:this.columns})
+        }
+        if(typeof labels == "function"){
+            return new DataFrame(this, {index:this.index.map(labels), columns:this.columns})
+        }
+        if(labels instanceof Map){
+            return new DataFrame(this, {index:this.index.map(v => labels.has(v) ? labels.get(v) : v), columns:this.columns})
+        }
+        return new DataFrame(this, {index:this.index.map(v => v in labels ? labels[v] : v), columns:this.columns})
     }
 
     /**
@@ -171,6 +205,7 @@ export default class DataFrame{
                 {name:options.column, index:this.index})
         }
     }
+
     /**
      * Retrieve data by position(s)
      * @param {*} options 
@@ -225,12 +260,14 @@ export default class DataFrame{
                 {index:this.index, name:this.columns.at(options.column)})
         }
     }
+
     /**
      * Returns the transpose of the dataframe
      */
     transpose(){
         return new DataFrame(utils.transpose(this._values), {index:this.columns, columns:this.index})
     }
+
     /**
      * Maps each value of the dataframe
      * 
@@ -240,24 +277,28 @@ export default class DataFrame{
         return new DataFrame(this._values.map(row => row.map(callback)), 
             {index:this.index, columns:this.columns})
     }
+    
     /**
      * Returns the absolute value of the numeric types
      */
     abs(){
         return this.map(value => utils.isNaN(value) ? NaN : Math.abs(value))
     }
+
     /**
      * Returns the negative value of the numeric types
      */
     neg(){
         return this.map(value => utils.isNaN(value) ? NaN : -value)
     }
+
     /**
      * Returns the boolean inverse of each value
      */
     not(){
         return this.map(value => !value)
     }
+
     /**
      * Returns a boolean series flagging non-numeric types
      * 
@@ -266,6 +307,7 @@ export default class DataFrame{
     isNaN(){
         return this.map((value) => utils.isNaN(value))
     }
+
     /**
      * Returns a boolean series flagging missing values
      * 
@@ -274,6 +316,7 @@ export default class DataFrame{
     isNA(){
         return this.map((value) => utils.isNA(value))
     }
+
     /**
      * Returns the smallest value across an axis
      * @param {*} options 
@@ -284,6 +327,7 @@ export default class DataFrame{
         }
         return this.transpose().min({axis:1})
     }
+
     /**
      * Returns the smallest value across an axis
      * @param {*} options 
@@ -294,6 +338,7 @@ export default class DataFrame{
         }
         return this.transpose().max({axis:1})
     }
+    
     /**
      * Returns the smallest value across an axis
      * @param {*} options 
@@ -304,6 +349,7 @@ export default class DataFrame{
         }
         return this.transpose().mean({axis:1})
     }
+
     /**
      * Returns the smallest value across an axis
      * @param {*} options 
@@ -314,6 +360,7 @@ export default class DataFrame{
         }
         return this.transpose().count({...options, axis:1})
     }
+
     /**
      * Returns the smallest value across an axis
      * @param {*} options 
