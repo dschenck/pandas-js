@@ -283,6 +283,34 @@ export default class DataFrame{
     }
 
     /**
+     * Slice by position
+     * 
+     * @param {*} start 
+     * @param {*} stop 
+     * @param {*} options 
+     */
+    islice(start, stop, options){
+        if(options && options.axis == 1){
+            if(start > this.columns.length || (this.columns.length + start) < 0){
+                throw new Error('Out of bounds error')
+            }
+            if(stop && (stop > this.columns.length || (this.columns.length + stop) < 0)){
+                throw new Error('Out of bounds error')
+            }
+            const values = this._values.map(row => row.slice(start, stop))
+            return new DataFrame(values, {index:this.index, columns:this.columns.islice(start, stop)})
+        }
+        if(start > this.index.length || (this.index.length + start) < 0){
+            throw new Error('Out of bounds error')
+        }
+        if(stop && (stop > this.index.length || (this.index.length + stop) < 0)){
+            throw new Error('Out of bounds error')
+        }
+        const values = this._values.slice(start, stop)
+        return new DataFrame(values, {index:this.index.islice(start, stop), columns:this.columns})
+    }
+
+    /**
      * Returns the transpose of the dataframe
      */
     transpose(){

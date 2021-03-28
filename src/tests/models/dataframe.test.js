@@ -294,6 +294,41 @@ describe("slicing by labels", () => {
     })
 })
 
+describe("slicing by position", () => {
+    const df1 = new DataFrame([[-1, 0, 1],[-2, 4, 1],[10, -9, 5]], 
+        {index:[1,2,3], columns:["A","B","C"]})
+
+    test("base case (axis=0)", () => {
+        expect(df1.islice(0,2).index.values).toEqual([1,2])
+        expect(df1.islice(0,2).columns.values).toEqual(df1.columns.values)
+        expect(df1.islice(0,2).values).toEqual([[-1, 0, 1],[-2, 4, 1]])
+
+        expect(df1.islice(0,2, {axis:0}).index.values).toEqual([1,2])
+        expect(df1.islice(0,2, {axis:0}).columns.values).toEqual(df1.columns.values)
+        expect(df1.islice(0,2, {axis:0}).values).toEqual([[-1, 0, 1],[-2, 4, 1]])
+
+        expect(df1.islice(null,2).index.values).toEqual([1,2])
+        expect(df1.islice(null,2).columns.values).toEqual(df1.columns.values)
+        expect(df1.islice(null,2).values).toEqual([[-1, 0, 1],[-2, 4, 1]])
+
+        expect(df1.islice(1).index.values).toEqual([2,3])
+        expect(df1.islice(1).columns.values).toEqual(df1.columns.values)
+        expect(df1.islice(1).values).toEqual([[-2, 4, 1],[10, -9, 5]])
+
+        expect(() => df1.islice(10)).toThrow(Error)
+
+        expect(df1.islice(0,1).index.values).toEqual([1])
+        expect(df1.islice(0,1).columns.values).toEqual(df1.columns.values)
+        expect(df1.islice(0,1).values).toEqual([[-1, 0, 1]])
+    })
+
+    test("base case (axis=1)", () => {
+        expect(df1.islice(0,2, {axis:1}).index.values).toEqual(df1.index.values)
+        expect(df1.islice(0,2, {axis:1}).columns.values).toEqual(["A","B"])
+        expect(df1.islice(0,2, {axis:1}).values).toEqual([[-1,0],[-2,4],[10, -9]])
+    })
+})
+
 describe("reducers", () => {
     const df1 = new DataFrame([[-1, 0, 1],[-2, 4, 1],[10, -9, 5]], 
                         {index:["1","2","3"], columns:["A","B","C"]})
