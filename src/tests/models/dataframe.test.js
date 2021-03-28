@@ -48,6 +48,24 @@ describe("instanciation", () => {
         expect(df2.index.length).toEqual(0)
         expect(df2.columns).toBeInstanceOf(Index)
         expect(df2.columns.length).toEqual(0)
+
+        const df3 = new DataFrame([], {index:[], columns:["A","B","C"]})
+        expect(df3).toBeInstanceOf(DataFrame)
+        expect(df3.shape).toEqual([0,3])
+        expect(df3.values).toEqual([])
+        expect(df3.index).toBeInstanceOf(Index)
+        expect(df3.index.length).toEqual(0)
+        expect(df3.columns).toBeInstanceOf(Index)
+        expect(df3.columns.length).toEqual(3)
+
+        const df4 = new DataFrame([[],[],[]], {index:["A","B","C"]})
+        expect(df4).toBeInstanceOf(DataFrame)
+        expect(df4.shape).toEqual([3,0])
+        expect(df4.values).toEqual([[],[],[]])
+        expect(df4.index).toBeInstanceOf(Index)
+        expect(df4.index.length).toEqual(3)
+        expect(df4.columns).toBeInstanceOf(Index)
+        expect(df4.columns.length).toEqual(0)
     })
 
     test("from another dataframe", () => {
@@ -233,6 +251,46 @@ describe("accessing data via position", () => {
 
     test("2 rows x 2 columns", () => {
         expect(df1.iloc({rows:[0,2],columns:[0,-2]})).toBeInstanceOf(DataFrame)
+    })
+})
+
+describe("slicing by labels", () => {
+    const df1 = new DataFrame([[-1, 0, 1],[-2, 4, 1],[10, -9, 5]], 
+        {index:[1,2,3], columns:["A","B","C"]})
+
+    test("base case (axis=0)", () => {
+        expect(df1.slice(1,3).index.values).toEqual([1,2])
+        expect(df1.slice(1,3).columns.values).toEqual(df1.columns.values)
+        expect(df1.slice(1,3).values).toEqual([[-1, 0, 1],[-2, 4, 1]])
+
+        expect(df1.slice(1,3, {axis:0}).index.values).toEqual([1,2])
+        expect(df1.slice(1,3, {axis:0}).columns.values).toEqual(df1.columns.values)
+        expect(df1.slice(1,3, {axis:0}).values).toEqual([[-1, 0, 1],[-2, 4, 1]])
+
+        expect(df1.slice(null,3).index.values).toEqual([1,2])
+        expect(df1.slice(null,3).columns.values).toEqual(df1.columns.values)
+        expect(df1.slice(null,3).values).toEqual([[-1, 0, 1],[-2, 4, 1]])
+
+        expect(df1.slice(2).index.values).toEqual([2,3])
+        expect(df1.slice(2).columns.values).toEqual(df1.columns.values)
+        expect(df1.slice(2).values).toEqual([[-2, 4, 1],[10, -9, 5]])
+
+        expect(df1.slice(10).index.values).toEqual([])
+        expect(df1.slice(10).columns.values).toEqual(df1.columns.values)
+        expect(df1.slice(10).shape).toEqual([0,3])
+
+        expect(df1.slice(1,2).index.values).toEqual([1])
+        expect(df1.slice(1,2).columns.values).toEqual(df1.columns.values)
+        expect(df1.slice(1,2).values).toEqual([[-1, 0, 1]])
+    })
+
+    //const df1 = new DataFrame([[-1, 0, 1],[-2, 4, 1],[10, -9, 5]], 
+    //   {index:[1,2,3], columns:["A","B","C"]})
+
+    test("base case (axis=1)", () => {
+        expect(df1.slice("A","C", {axis:1}).index.values).toEqual(df1.index.values)
+        expect(df1.slice("A","C", {axis:1}).columns.values).toEqual(["A","B"])
+        expect(df1.slice("A","C", {axis:1}).values).toEqual([[-1,0],[-2,4],[10, -9]])
     })
 })
 

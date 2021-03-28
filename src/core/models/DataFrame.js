@@ -23,7 +23,7 @@ export default class DataFrame{
         else if(utils.isMatrix(data)){
             this._values  = data.length == 0 ? [] : data.map(row => [...row])
             this._index   = new Index(utils.range(data.length))
-            this._columns = data.length > 0 ? new Index(utils.range(data[0].length)) : new Index()
+            this._columns = data.length > 0 ? new Index(utils.range(data[0].length)) : new Index(options && options.columns || [])
         }
         else if(Array.isArray(data) && data.every(item => item instanceof Series)){
             this._index   = new Index(data.map((srs, i) => srs.name || i))
@@ -262,6 +262,27 @@ export default class DataFrame{
     }
 
     /**
+     * 
+     * @param {*} start 
+     * @param {*} stop 
+     * @param {*} options 
+     */
+    slice(start, stop, options){
+        if(options && options.axis == 1){
+            const columns = this.columns.slice(start, stop)
+            const values  = this._values.map(row => {
+                return row.filter((v, i) => columns.has(this.columns.at(i)))
+            })
+            return new DataFrame(values, {index:this.index, columns:columns})
+        }
+        const index  = this.index.slice(start, stop)
+        const values = this._values.filter((row, i) => {
+            return index.has(this.index.at(i))
+        })
+        return new DataFrame(values, {index:index, columns:this.columns})
+    }
+
+    /**
      * Returns the transpose of the dataframe
      */
     transpose(){
@@ -380,4 +401,6 @@ export default class DataFrame{
             return new Series(row, {name:this.index.at(r), index:this.columns})
         })
     }
+
+
 }
