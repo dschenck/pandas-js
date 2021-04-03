@@ -7,9 +7,6 @@ import Series     from './Series'
 export default class Index{ 
     constructor(values, options){
         if(values instanceof Index){
-            if(!options){
-                return values
-            }
             this._values  = values._values
             this._options = {...values.options, ...options}
             return this
