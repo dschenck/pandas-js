@@ -1,6 +1,6 @@
 {
   "name": "@davidschenck/pandasjs",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "description": "Pandas for javascipt",
   "main": "src/index.js",
   "scripts": {
@@ -12,17 +12,17 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "dayjs": "^1.9.1"
+    "dayjs": "^1.10.4"
   },
   "devDependencies": {
-    "@babel/core": "^7.9.0",
-    "@babel/preset-env": "^7.9.5",
-    "@babel/preset-react": "^7.9.4",
+    "@babel/core": "^7.13.14",
+    "@babel/preset-env": "^7.13.12",
+    "@babel/preset-react": "^7.13.13",
     "babel-jest": "^26.6.3",
-    "babel-loader": "^8.1.0",
+    "babel-loader": "^8.2.2",
     "jest": "^26.6.3",
-    "webpack": "^5.11.1",
-    "webpack-cli": "^3.3.11",
-    "webpack-dev-server": "^3.11.1"
+    "webpack": "^5.30.0",
+    "webpack-cli": "^3.3.12",
+    "webpack-dev-server": "^3.11.2"
   }
 }
