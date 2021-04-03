@@ -1,1 +1,1 @@
-# pandas-js
+# pandasjs
