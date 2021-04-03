@@ -311,6 +311,13 @@ export default class DataFrame{
     }
 
     /**
+     * Returns a copy
+     */
+    copy(){
+        return new DataFrame(this)
+    }
+
+    /**
      * Returns the transpose of the dataframe
      */
     transpose(){
@@ -367,14 +374,51 @@ export default class DataFrame{
     }
 
     /**
+     * Reduces each column/row to a single value
+     * 
+     * @param {*} callback 
+     * @param {*} options 
+     */
+    reduce(callback, options){
+        if(options && options.axis == 1){
+            if(options.raw){
+                return new Series(
+                    this._values.map((row, i) => callback(row, i)), 
+                    {index:this.index, name:options.name}
+                )
+            }
+            return new Series(
+                this._values.map((row, i) => {
+                    return callback(new Series(row, {index:this.columns, name:this.index.at(i)}), i)
+                }), 
+                {index:this.index, name:options.name}
+            )
+        }
+        return this.transpose().reduce(callback, {...options, axis:1})
+    }
+
+    /**
+     * 
+     * @param {*} options 
+     */
+    all(options){
+        return this.reduce(values => stats.all(values), {...options, raw:true})
+    }
+
+    /**
+     * 
+     * @param {*} options 
+     */
+    any(options){
+        return this.reduce(values => stats.any(values), {...options, raw:true})
+    }
+
+    /**
      * Returns the smallest value across an axis
      * @param {*} options 
      */
     min(options){
-        if(options && options.axis == 1){
-            return new Series(this._values.map(row => stats.min(row), {index:this.index, name:"min"}))
-        }
-        return this.transpose().min({axis:1})
+        return this.reduce(values => stats.min(values), {...options, raw:true})
     }
 
     /**
@@ -382,10 +426,7 @@ export default class DataFrame{
      * @param {*} options 
      */
     max(options){
-        if(options && options.axis == 1){
-            return new Series(this._values.map(row => stats.max(row), {index:this.index, name:"max"}))
-        }
-        return this.transpose().max({axis:1})
+        return this.reduce(values => stats.max(values), {...options, raw:true})
     }
     
     /**
@@ -393,10 +434,7 @@ export default class DataFrame{
      * @param {*} options 
      */
     mean(options){
-        if(options && options.axis == 1){
-            return new Series(this._values.map(row => stats.mean(row), {index:this.index, name:"mean"}))
-        }
-        return this.transpose().mean({axis:1})
+        return this.reduce(values => stats.mean(values), {...options, raw:true})
     }
 
     /**
@@ -404,10 +442,7 @@ export default class DataFrame{
      * @param {*} options 
      */
     count(options){
-        if(options && options.axis == 1){
-            return new Series(this._values.map(row => stats.count(row, options), {index:this.index, name:"count"}))
-        }
-        return this.transpose().count({...options, axis:1})
+        return this.reduce(values => stats.count(values), {...options, raw:true})
     }
 
     /**
@@ -415,10 +450,68 @@ export default class DataFrame{
      * @param {*} options 
      */
     sum(options){
+        return this.reduce(values => stats.sum(values), {...options, raw:true})
+    }
+
+    /**
+     * Returns the variance
+     * @param {*} options 
+     */
+    var(options){
+        return this.reduce(values => stats.variance(values, {ddof:options.ddof || 1}), {...options, raw:true})
+    }
+
+    /**
+     * 
+     * @param {*} options 
+     */
+    std(options){
+        return this.reduce(values => stats.std(values, {ddof:options.ddof || 1}), {...options, raw:true})
+    }
+
+    /**
+     * 
+     */
+    mdd(options){
+        return this.reduce(values => stats.mdd(values), {...options, raw:true})
+    }
+
+    /**
+     * 
+     * @param {*} options 
+     */
+    dropna(options){
+        const mask = (options && options.how) == "all" ? this.isNA().all({axis:options && options.axis || 0}) : this.isNA().any({axis:options && options.axis || 0})
+        
         if(options && options.axis == 1){
-            return new Series(this._values.map(row => stats.sum(row), {index:this.index, name:"sum"}))
+            return new DataFrame(
+                this._values.filter((v, i) => mask.iloc(i)), 
+                {index:this.index.mask(mask), columns:this.columns}
+            )
         }
-        return this.transpose().count({axis:1})
+        return new DataFrame(
+            this._values.map(row => row.filter((v, i) => mask.iloc(i))),
+            {index:this.index, columns:this.columns.mask(mask)}
+        )
+    }
+
+    /**
+     * 
+     * @param {*} options 
+     */
+    dropnan(options){
+        const mask = (options && options.how) == "all" ? this.isNaN().all({axis:options && options.axis || 0}) : this.isNaN().any({axis:options && options.axis || 0})
+        
+        if(options && options.axis == 1){
+            return new DataFrame(
+                this._values.filter((v, i) => mask.iloc(i)), 
+                {index:this.index.mask(mask), columns:this.columns}
+            )
+        }
+        return new DataFrame(
+            this._values.map(row => row.filter((v, i) => mask.iloc(i))),
+            {index:this.index, columns:this.columns.mask(mask)}
+        )
     }
 
     /**
