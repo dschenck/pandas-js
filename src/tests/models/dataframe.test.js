@@ -329,6 +329,58 @@ describe("slicing by position", () => {
     })
 })
 
+describe("asof", () => {
+    const df1 = new DataFrame([[-1, 0, 1],[-2, 4, 1],[10, -9, 5]], 
+        {index:[1,2,3], columns:["A","B","C"]}
+    )
+
+    test("base case (axis=0)", () => {
+        expect(df1.asof(1.5).values).toEqual([-1,0,1])
+        expect(df1.asof(1.5).name).toEqual(1)
+        expect(df1.asof(1).name).toEqual(1)
+        expect(() => ef1.asof(0)).toThrow(Error)
+        expect(df1.asof(99).values).toEqual([10,-9,5])
+    })
+
+    test("base case (axis=1)", () => {
+        expect(df1.asof("BBB", {axis:1}).values).toEqual([0,4,-9])
+        expect(df1.asof("BBB", {axis:1}).name).toEqual("B")
+        expect(df1.asof("ZZZ", {axis:1}).values).toEqual([1,1,5])
+        expect(df1.asof("ZZZ", {axis:1}).name).toEqual("C")
+    })
+})
+
+describe("reindexing", () => {
+    const df1 = new DataFrame([[-1, 0, 1],[-2, 4, 1],[10, -9, 5]], 
+        {index:[1,2,3], columns:["A","B","C"]}
+    )
+
+    test("base case (axis = 0)", () => {
+        const df2 = df1.reindex([3,1,-1])
+        expect(df2.index.values).toEqual([3,1,-1])
+        expect(df2.values).toEqual([[10,-9,5],[-1,0,1],[NaN,NaN,NaN]])
+        expect(df2.columns.values).toEqual(df1.columns.values)
+    })
+
+    test("base case (axis=1)", () => {
+        const df2 = df1.reindex(["C","A","X"], {axis:1})
+        expect(df2.index.values).toEqual(df1.index.values)
+        expect(df2.columns.values).toEqual(["C","A","X"])
+        expect(df2.values).toEqual([[1,-1,NaN],[1,-2,NaN],[5,10,NaN]])
+    })
+
+    test("filling with a specific value", () => {
+        const df2 = df1.reindex([3,1,-9], {fillna:"XXX"})
+        expect(df2.values).toEqual([[10,-9,5],[-1,0,1],["XXX","XXX","XXX"]])
+    })
+
+    test("forward filling", () => {
+        const df2 = df1.reindex([2,1,-9,4], {fillna:"ffill"})
+        expect(df2.index.values).toEqual([2,1,-9,4])
+        expect(df2.values).toEqual([[-2,4,1],[-1,0,1],[NaN,NaN,NaN],[10,-9,5]])
+    })
+})
+
 describe("reducers", () => {
     const df1 = new DataFrame([[-1, 0, 1],[-2, 4, 1],[10, -9, 5]], 
                         {index:["1","2","3"], columns:["A","B","C"]})

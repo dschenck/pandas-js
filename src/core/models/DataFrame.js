@@ -311,6 +311,52 @@ export default class DataFrame{
     }
 
     /**
+     * Returns the row or columns at the largest label lower or equal to the
+     * given label 
+     * 
+     * @param {*} label 
+     * @param {*} options 
+     * @returns 
+     */
+    asof(label, options){
+        if(options && options.axis == 1){
+            return this.loc({column:this.columns.asof(label)})
+        }
+        return this.loc({row:this.index.asof(label)})
+    }
+
+    /**
+     * Reindexes the dataframe with another index
+     * 
+     * @param {*} index 
+     * @param {*} options 
+     * @returns 
+     */
+    reindex(index, options){
+        if(options && options.axis == 1){
+            return this.transpose().reindex(index, {...options, axis:0}).transpose()
+        }
+        const values = [...index].map((label, i, index) => {
+            if(this.index.has(label)){
+                return this._values[this.index.loc(label)]
+            }
+            if(options && options.fillna == "ffill"){
+                try{
+                    if(i == 0 || this.index.asof(label) > index[i-1]){
+                        return this.asof(label)._values
+                    }
+                }   
+                catch(err){
+                    return utils.range(this.shape[1]).map(v => NaN)
+                }
+                return utils.range(this.shape[1]).map(v => NaN)
+            }
+            return utils.range(this.shape[1]).map(v => options && options.fillna || NaN)
+        })
+        return new DataFrame(values, {index:index, columns:this.columns})
+    }
+
+    /**
      * Returns a copy
      */
     copy(){
