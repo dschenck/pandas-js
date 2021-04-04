@@ -578,6 +578,9 @@ describe("reindex", () => {
         expect(s1.reindex(
             new Index([1,3,5,5.5]), {fillna:"ffill"}
         ).values).toEqual([0,1,2,NaN])
+        expect(s1.reindex(
+            new Index([-2,3,5,5.5]), {fillna:"ffill"}
+        ).values).toEqual([NaN,1,2,NaN])
     })
 })
 

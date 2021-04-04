@@ -1106,14 +1106,17 @@ export default class Series{
             }
             if(options && options.fillna == "ffill"){
                 //get the most recent value which is strictly after the previous index
-                if(this.index.sorted == "ascending" && idx >= this.index.at(0)){
+                try{
                     if(i == 0 || this.index.asof(idx) > index[i-1]){
                         return this.asof(idx)
                     }
+                }
+                catch{
                     return NaN
                 }
+                return NaN
             }
-            return NaN
+            return options && options.fillna || NaN
         })
         return new Series(values, {index:index, name:this.name})
     }
