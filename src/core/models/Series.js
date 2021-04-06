@@ -113,6 +113,30 @@ export default class Series{
     rename(name){
         return new Series(this._values, {name:name, index:this.index})
     }
+
+    /**
+     * Return the value at a given label
+     * 
+     * @param {*} label 
+     * @returns 
+     */
+    at(label){
+        return this._values[this.index.loc(label)]
+    }
+
+    /**
+     * Return the value at a given index 
+     * 
+     * @param {*} index 
+     * @returns 
+     */
+    iat(index){
+        if(index >= this.length){
+            throw new Error(`Out of range: series length is ${this.length}, ${index} given`)
+        }
+        return this._values[index]
+    }
+
     /**
      * Retrieves the value at a given label (index value)
      * Should throw an error if a label is not present in the index
