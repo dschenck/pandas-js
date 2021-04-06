@@ -153,6 +153,16 @@ describe("union", () => {
         const i2 = [4,5,6,7,8,9,10]
         expect(i1.union(i2).values).toEqual([1,2,3,4,5,6,7,8,9,10])
     })
+
+    test("preserve ordering when no change", () => {
+        const i1 = new Index([3,2,5,4,1])
+        expect(i1.union(i1).values).toEqual([3,2,5,4,1])
+        expect(i1.union([1,2,3]).values).toEqual([3,2,5,4,1])
+        expect(i1.union([1,2,6]).values).toEqual([1,2,3,4,5,6])
+
+        //sort if requested
+        expect(i1.union(i1, {sort:true}).values).toEqual([1,2,3,4,5])
+    })
 })
 
 describe("intersection", () => {
