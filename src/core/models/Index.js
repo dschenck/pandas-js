@@ -515,6 +515,7 @@ export default class Index{
         const index  = new Index(values, {name:this.name})
 
         if(!options || options.sort === undefined){
+            if(index.length == this.length) return this
             return index.sortable ? index.sort() : index
         }
         if(options.sort){
