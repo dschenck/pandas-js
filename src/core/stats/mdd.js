@@ -23,9 +23,12 @@ export default function (values) {
         if (utils.isNaN(curr)) {
             acc.push(i == 0 ? { index: NaN, value: NaN } : acc[acc.length - 1])
         }
+        else if (i == 0) {
+            acc.push({ index: i, value: curr })
+        }
         else {
             //NaN is never greater than
-            acc.push((i == 0 || acc[acc.length - 1].value) > curr ? acc[acc.length - 1] : { index: i, value: curr })
+            acc.push(acc[acc.length - 1].value > curr ? acc[acc.length - 1] : { index: i, value: curr })
         }
         return acc
     }, [])
