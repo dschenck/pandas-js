@@ -534,6 +534,7 @@ export default class Index{
         const index = this.filter(v => !intersection.has(v))
 
         if(!options || options.sort === undefined){
+            if(index.length == this.length) return this
             return index.sortable ? index.sort() : index
         }
         if(options.sort){
