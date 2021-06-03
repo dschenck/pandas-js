@@ -157,6 +157,20 @@ export default class DataFrame{
         return new DataFrame(this, {index:this.index.map(v => v in labels ? labels[v] : v), columns:this.columns})
     }
 
+    assign(values, options){
+        if(options && options.axis == 1){
+            
+        }
+        if(options && options.name){
+            if(this.columns.has(options.name)){
+                //update column
+            }
+            else{
+                //insert column
+            }
+        }
+    }
+
     /**
      * Retrieve data by label(s)
      * @param {*} options 
@@ -204,6 +218,28 @@ export default class DataFrame{
             return new Series(this._values.map(row => row[this.columns.loc(options.column)]), 
                 {name:options.column, index:this.index})
         }
+    }
+
+    /**
+     * 
+     * @param {*} index 
+     * @param {*} column 
+     * @returns 
+     */
+    iat(index, column){
+        if(index >= this.shape[0] || column >= this.shape[1]){
+            throw new Error(`Out of range: DataFrame is ${this.shape[0]}x${this.shape[1]}, ${index}x${column} given`)
+        }
+        return this._values[index][column]
+    }
+    /**
+     * 
+     * @param {*} index 
+     * @param {*} column 
+     * @returns 
+     */
+    at(index, column){
+        return this._values[this.index.loc(index)][this.columns.loc(column)]
     }
 
     /**
@@ -522,6 +558,183 @@ export default class DataFrame{
         return this.reduce(values => stats.mdd(values), {...options, raw:true})
     }
 
+    /**
+     * Combine this DataFrame with another value, array, Series, matrix or other DataFrame
+     * with a callback function 
+     * 
+     * @param {*} other 
+     * @param {*} callback 
+     * @param {*} options 
+     * @returns 
+     */
+    combine(other, callback, options){
+        if(utils.isPrimitive(other)){
+            return this.map(value => callback(value, other))
+        }
+        if(other instanceof DataFrame){
+            if(options && options["ignore axis"]){
+                if(this.shape[0] != other.shape[0] || this.shape[1] != other.shape[1]){
+                    throw new Error("DataFrames need to be of equal size")
+                }
+                const values = this._values.map((row, r) => {
+                    return row.map((cell, c) => callback(cell, other._values[r][c]))
+                })
+                return new DataFrame(values, {index:this.index, columns:this.columns})
+            }
+            const index   = [...this.index.union(other.index)]
+            const columns = [...this.columns.union(other.columns)]
+            const values  = index.map(idx => {
+                if(this.index.has(idx) && other.index.has(idx)){
+                    return columns.map(col => {
+                        if(this.columns.has(col) && other.columns.has(col)){
+                            return callback(this.at(idx, col), other.at(idx, col))
+                        }
+                        return NaN
+                    })
+                }
+                return utils.range(columns.length).map(v => NaN)
+            })
+            return new DataFrame(values, {index:index, columns:columns})
+        }
+        if(utils.isMatrix(other)){
+            if(this.shape[0] != other.length || this.shape[1] != other[0].length){
+                throw new Error(`Size mismatch: DataFrame is ${this.shape[0]}x${this.shape[1]}, matrix is ${other.length}x${other[0].length}`)
+            }
+            const values = this._values.map((row, r) => {
+                return row.map((cell, c) => callback(cell, other._values[r][c]))
+            })
+            return new DataFrame(values, {index:this.index, columns:this.columns})
+        }
+        if(Array.isArray(other)){
+            if(options && options.axis == 1){
+                if(this.shape[1] != other.length){
+                    throw new Error(`Size mismatch: DataFrame is ${this.shape[0]}x${this.shape[1]}, array is ${other.length}`)
+                }
+                const values = this._values.map((row => {
+                    return row.map((value, c) => callback(value, other[c]))
+                }))
+                return new DataFrame(values, {index:this.index, columns:this.columns})
+            }
+            else{
+                if(this.shape[0] != other.length){
+                    throw new Error(`Size mismatch: DataFrame is ${this.shape[0]}x${this.shape[1]}, array is ${other.length}`)
+                }
+                const values = this._values.map((row, r) => {
+                    return row.map(value => callback(value, other[r]))
+                })
+                return new DataFrame(values, {index:this.index, columns:this.columns})
+            }
+        }
+        if(other instanceof Series){
+            if(options && options.axis == 1){
+                if(options["ignore axis"]){
+                    if(this.shape[1] != other.length){
+                        throw new Error(`Size mismatch: rows are ${this.shape[1]} long, series is ${other.length}`)
+                    }
+                    const values = this._values.map((row => {
+                        return row.map((value, c) => callback(value, other._values[c]))
+                    }))
+                    return new DataFrame(values, {index:this.index, columns:this.columns})
+                }
+                const columns = [...this.columns.union(other.index)]
+                const values  = [...this.index].map((idx, i) => {
+                    return columns.map(col => {
+                        if(this.columns.has(col) && other.index.has(col)){
+                            return callback(this.at(idx, col), other.at(col))
+                        }
+                        return NaN
+                    })
+                })
+                return new DataFrame(values, {index:this.index, columns:columns}) 
+            }
+            else{
+                if(options && options["ignore axis"]){
+                    if(this.shape[0] != other.length){
+                        throw new Error(`Size mismatch: columns are ${this.shape[0]} high, series is ${other.length}`)
+                    }
+                    const values = this._values.map((row, r) => {
+                        return row.map(value => callback(value, other._values[r]))
+                    })
+                    return new DataFrame(values, {index:this.index, columns:this.columns})
+                }
+                const index   = [...this.index.union(other.index)]
+                const columns = [...this.columns]
+                const values  = index.map((idx, i) => {
+                    if(this.index.has(idx) && other.index.has(idx)){
+                        return columns.map(col => callback(this.at(idx, col), other.at(idx)))
+                    }
+                    return columns.map(col => NaN)
+                })
+                return new DataFrame(values, {index:index, columns:this.columns})
+            }
+        }
+        if(other instanceof Index){
+            return this.combine(Series(other), callback, options)
+        }
+    }
+
+    /**
+     * 
+     * @param {*} other 
+     * @param {*} options 
+     * @returns 
+     */
+    add(other, options){
+        return this.combine(other, (a, b) => utils.isNaN(a) || utils.isNaN(b) ? NaN : a + b, options)
+    }
+
+    subtract(other, options){
+        return this.combine(other, (a, b) => utils.isNaN(a) || utils.isNaN(b) ? NaN : a - b, options)
+    }
+
+    multiply(other, options){
+        return this.combine(other, (a, b) => utils.isNaN(a) || utils.isNaN(b) ? NaN : a * b, options)
+    }
+
+    divide(other, options){
+        return this.combine(other, (a, b) => utils.isNaN(a) || utils.isNaN(b) || b == 0 ? NaN : a / b, options)
+    }
+
+    pow(other, options){
+        return this.combine(other, (a, b) => utils.isNaN(a) || utils.isNaN(b) ? NaN : Math.pow(a, b), options)
+    }
+
+    mod(other, options){
+        return this.combine(other, (a, b) => utils.isNaN(a) || utils.isNaN(b) ? NaN : Math.mod(a, b), options)
+    }
+
+    equals(other, options){
+        return this.combine(other, (a, b) => a == b, options) 
+    }
+
+    ne(other, options){
+        return this.combine(other, (a, b) => a != b, options) 
+    }
+
+    gt(other, options){
+        return this.combine(other, (a, b) => a > b, options) 
+    }
+
+    gte(other, options){
+        return this.combine(other, (a, b) => a >= b, options) 
+    }
+
+    lt(other, options){
+        return this.combine(other, (a, b) => a < b, options) 
+    }
+
+    lte(other, options){
+        return this.combine(other, (a, b) => a <= b, options) 
+    }
+
+    and(other, options){
+        return this.combine(other, (a, b) => (a == true) && (b == true), options) 
+    }
+
+    or(other, options){
+        return this.combine(other, (a, b) => (a == true) || (b == true), options) 
+    }
+    
     /**
      * 
      * @param {*} options 

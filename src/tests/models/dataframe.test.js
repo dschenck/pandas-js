@@ -138,6 +138,35 @@ describe("instanciation", () => {
     })
 })
 
+describe("at", () => {
+    const df1 = new DataFrame(
+        [["A1","B1","C1"],["A2","B2","C2"],["A3","B3","C3"]], 
+        {index:["1","2","3"], columns:["A","B","C"]}
+    )
+    test("base case", () => {
+        expect(df1.at("2","B")).toEqual("B2")
+    })
+    test("error", () => {
+        expect(() => df1.at("2", "X")).toThrow(Error)
+    })
+})
+
+describe("iat", () => {
+    const df1 = new DataFrame(
+        [["A1","B1","C1"],["A2","B2","C2"],["A3","B3","C3"]], 
+        {index:["1","2","3"], columns:["A","B","C"]}
+    )
+    test("base case", () => {
+        expect(df1.iat(0,0)).toEqual("A1")
+        expect(df1.iat(0,1)).toEqual("B1")
+        expect(df1.iat(1,1)).toEqual("B2")
+        expect(df1.iat(2,2)).toEqual("C3")
+    })
+    test("error (out of range)", () => {
+        expect(() => df1.iat(3,3)).toThrow(Error)
+    })
+})
+
 describe("rename labels", () => {
     const df1 = new DataFrame(
         [["A1","B1","C1"],["A2","B2","C2"],["A3","B3","C3"]], 
@@ -379,6 +408,103 @@ describe("reindexing", () => {
         expect(df2.index.values).toEqual([2,1,-9,4])
         expect(df2.values).toEqual([[-2,4,1],[-1,0,1],[NaN,NaN,NaN],[10,-9,5]])
     })
+})
+
+describe("combine", () => {
+    const df1 = new DataFrame(
+        [["A1","B1","C1","D1"],["A2","B2","C2","D2"],["A3","B3","C3","D3"]], 
+        {index:["1","2","3"], columns:["A","B","C","D"]}
+    )
+    test("combine with a scalar", () => {
+        const df2 = df1.combine("X", (a, b) => a + b)
+
+        expect(df2.index.values).toEqual(df1.index.values)
+        expect(df2.columns.values).toEqual(df1.columns.values)
+        expect(df2.values).toEqual([["A1X","B1X","C1X","D1X"],["A2X","B2X","C2X","D2X"],["A3X","B3X","C3X","D3X"]])
+    })
+    test("combine with an array (axis=0)", () => {
+        const df2 = df1.combine([1,2,3], (a, b) => a[0] == "A" ? b : a)
+
+        expect(df2.index.values).toEqual(df1.index.values)
+        expect(df2.columns.values).toEqual(df1.columns.values)
+        expect(df2.values).toEqual([[1,"B1","C1","D1"],[2,"B2","C2","D2"],[3,"B3","C3","D3"]])
+
+        //explicit the axis
+        const df3 = df1.combine([1,2,3], (a, b) => a[0] == "A" ? b : a, {axis:0})
+
+        expect(df3.index.values).toEqual(df1.index.values)
+        expect(df3.columns.values).toEqual(df1.columns.values)
+        expect(df3.values).toEqual([[1,"B1","C1","D1"],[2,"B2","C2","D2"],[3,"B3","C3","D3"]])
+
+        //length mismatch
+        expect(() => df1.combine([1,2,3,4], (a, b) => a)).toThrow(Error)
+        expect(() => df1.combine([1,2,3,4], (a, b) => a, {axis:0})).toThrow(Error)
+    })
+    test("combine with an array (axis=1)", () => {
+        const df2 = df1.combine([1,2,3,4], (a, b) => a[a.length-1] == "1" ? b : a, {axis:1})
+
+        expect(df2.index.values).toEqual(df1.index.values)
+        expect(df2.columns.values).toEqual(df1.columns.values)
+        expect(df2.values).toEqual([[1,2,3,4],["A2","B2","C2","D2"],["A3","B3","C3","D3"]])
+
+        //length mismatch
+        expect(() => df1.combine([1], (a, b) => a, {axis:1})).toThrow(Error)
+    })
+
+    test("combine with another dataframe", () => {
+        const df2 = df1.map(value => value[value.length - 1])
+        const df3 = df1.combine(df2, (a, b) => a + b)
+
+        expect(df3.index.values).toEqual(df1.index.values)
+        expect(df3.columns.values).toEqual(df1.columns.values)
+        expect(df3.values).toEqual([["A11","B11","C11","D11"],["A22","B22","C22","D22"],["A33","B33","C33","D33"]])
+
+        //reindexing
+        const df4 = new DataFrame(
+            [["C2","D2","E2","F2"],["C3","D3","E3","F3"],["C4","D4","E4","F4"]], 
+            {index:["2","3","4"], columns:["C","D","E","F"]}
+        ) 
+        const df5 = df1.combine(df4, (a, b) => a)
+
+        expect(df5.index.values).toEqual(["1","2","3","4"])
+        expect(df5.columns.values).toEqual(["A","B","C","D","E","F"])
+        expect(df5.values).toEqual([
+            [NaN,NaN,NaN,NaN,NaN,NaN],
+            [NaN,NaN,"C2","D2",NaN,NaN],
+            [NaN,NaN,"C3","D3",NaN,NaN],
+            [NaN,NaN,NaN,NaN,NaN,NaN]
+        ])
+
+        //ignore index
+        const df6 = df1.combine(df4, (a, b) => a + b, {"ignore axis":true})
+        expect(df6.index.values).toEqual(["1","2","3"])
+        expect(df6.columns.values).toEqual(["A","B","C","D"])
+        expect(df6.values).toEqual([
+            ["A1C2","B1D2","C1E2","D1F2"],
+            ["A2C3","B2D3","C2E3","D2F3"],
+            ["A3C4","B3D4","C3E4","D3F4"]
+        ])
+
+        //size mismatch
+        expect(() => df1.combine(DataFrame([[1,2,3],[4,5,6]]), (a, b) => a, {"ignore axis":true})).toThrow(Error)
+    })
+
+    test("combine with a Series", () => {
+        const srs = new Series([3,2,1], {index:df1.index})
+        const df2 = df1.combine(srs, (a, b) => a[0] == "A" ? b : a)
+
+        expect(df2.index.values).toEqual(df1.index.values)
+        expect(df2.columns.values).toEqual(df1.columns.values)
+        expect(df2.values).toEqual([[3,"B1","C1","D1"],[2,"B2","C2","D2"],[1,"B3","C3","D3"]])
+
+        //explicit the axis
+        const df3 = df1.combine(srs, (a, b) => a[0] == "A" ? b : a, {axis:0})
+
+        expect(df3.index.values).toEqual(df1.index.values)
+        expect(df3.columns.values).toEqual(df1.columns.values)
+        expect(df3.values).toEqual([[3,"B1","C1","D1"],[2,"B2","C2","D2"],[1,"B3","C3","D3"]])
+    })
+
 })
 
 describe("reducers", () => {
