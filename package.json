@@ -6,13 +6,16 @@
   "scripts": {
     "start": "webpack-dev-server --open --hot --mode development --port 3000",
     "build": "webpack --mode production",
+    "docs": "jsdoc -c jsdoc.json",
     "test": "jest"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "dayjs": "^1.10.4"
+    "dayjs": "^1.10.4",
+    "jsdoc": "^3.6.6",
+    "jstat": "^1.9.4"
   },
   "devDependencies": {
     "@babel/core": "^7.13.14",
