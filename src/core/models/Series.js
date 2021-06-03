@@ -1,64 +1,64 @@
-import datetime      from '../libs/datetime'
-import * as utils    from '../utils'
-import stats         from '../stats'
-import Index         from './Index'
+import datetime from '../libs/datetime'
+import * as utils from '../utils'
+import stats from '../stats'
+import Index from './Index'
 import { SeriesGroupby, Pivot, Rolling } from './Grouper'
 
-export default class Series{
-    constructor(data, options){
-        if(data === undefined){
+export default class Series {
+    constructor(data, options) {
+        if (data === undefined) {
             this._values = []
         }
-        else if(data instanceof Series){
+        else if (data instanceof Series) {
             this._values = data.values
-            this._name   = data.name
-            this._index  = data.index
+            this._name = data.name
+            this._index = data.index
         }
-        else if(utils.isIterable(data) && !utils.isString(data)){
+        else if (utils.isIterable(data) && !utils.isString(data)) {
             this._values = [...data]
         }
-        else if(typeof data == "object"){
-            if(data.data && data.index){
-                return new Series(data.data, {name:data.name, index:data.index})
+        else if (typeof data == "object") {
+            if (data.data && data.index) {
+                return new Series(data.data, { name: data.name, index: data.index })
             }
             this._values = Object.values(data)
-            this._index  = new Index(Object.keys(data))
+            this._index = new Index(Object.keys(data))
         }
-        else{ 
+        else {
             throw new TypeError('Could not parse the data')
         }
 
-        if(options && options.name){
+        if (options && options.name) {
             this._name = options.name
         }
-        if(options && options.index){
+        if (options && options.index) {
             this._index = new Index(options.index)
-            if(this._index.length != this._values.length){
+            if (this._index.length != this._values.length) {
                 throw new Error('Index and data are of different length')
             }
         }
-        else if(this._index === undefined){
+        else if (this._index === undefined) {
             this._index = new Index(utils.range(this._values.length))
         }
     }
     /**
      * Returns the values as a primitive list
      */
-    get values(){
+    get values() {
         return [...this._values]
     }
 
     /**
      * Returns the index
      */
-    get index(){
+    get index() {
         return this._index
     }
 
     /**
      * Returns a list of (key:value)
      */
-    get items(){
+    get items() {
         return this._values.map((v, i) => [this.index.at(i), v])
     }
 
@@ -67,7 +67,7 @@ export default class Series{
      * 
      * @returns {*}
      */
-    get name(){
+    get name() {
         return this._name
     }
 
@@ -76,16 +76,16 @@ export default class Series{
      * 
      * @returns {number}
      */
-    get length(){
+    get length() {
         return this._values.length
     }
 
     /**
      * Sets a new index
      */
-    set index(values){
+    set index(values) {
         const index = new Index(values)
-        if(index.length != this.length){
+        if (index.length != this.length) {
             throw new Error('Length mismatch error')
         }
         this._index = index
@@ -93,13 +93,13 @@ export default class Series{
 
     [Symbol.iterator]() {
         let index = 0;
-    
+
         return {
             next: () => {
                 if (index < this._values.length) {
-                    return {value: this._values[index++], done: false}
+                    return { value: this._values[index++], done: false }
                 } else {
-                    return {done: true}
+                    return { done: true }
                 }
             }
         }
@@ -110,8 +110,8 @@ export default class Series{
      * 
      * @param {*} name the new name
      */
-    rename(name){
-        return new Series(this._values, {name:name, index:this.index})
+    rename(name) {
+        return new Series(this._values, { name: name, index: this.index })
     }
 
     /**
@@ -120,7 +120,7 @@ export default class Series{
      * @param {*} label 
      * @returns 
      */
-    at(label){
+    at(label) {
         return this._values[this.index.loc(label)]
     }
 
@@ -130,8 +130,8 @@ export default class Series{
      * @param {*} index 
      * @returns 
      */
-    iat(index){
-        if(index >= this.length){
+    iat(index) {
+        if (index >= this.length) {
             throw new Error(`Out of range: series length is ${this.length}, ${index} given`)
         }
         return this._values[index]
@@ -144,11 +144,11 @@ export default class Series{
      * @param {Array|Series} labels the label(s) at which to retrieve a value
      * @returns {*} return type depends on labels type
      */
-    loc(labels){
-        if(utils.isIterable(labels) && !utils.isString(labels)){
+    loc(labels) {
+        if (utils.isIterable(labels) && !utils.isString(labels)) {
             return new Series(
-                labels.map(label => this.loc(label)), 
-                {name:this.name, index:labels}
+                labels.map(label => this.loc(label)),
+                { name: this.name, index: labels }
             )
         }
         return this._values[this.index.indexOf(labels)]
@@ -159,14 +159,14 @@ export default class Series{
      * @param {number} index the position (index)
      * @returns {*} the value at the provided position
      */
-    iloc(indices){
-        if(utils.isIterable(indices) && !utils.isString(indices)){
+    iloc(indices) {
+        if (utils.isIterable(indices) && !utils.isString(indices)) {
             return new Series(
-                [...indices].map(i => this.iloc(i)), 
-                {name:this.name, index:[...indices].map(i => this.index.at(i))}
+                [...indices].map(i => this.iloc(i)),
+                { name: this.name, index: [...indices].map(i => this.index.at(i)) }
             )
         }
-        if(indices >= this.length || (this.length + indices) < 0){
+        if (indices >= this.length || (this.length + indices) < 0) {
             throw new Error('Out of bounds error')
         }
         return this._values[indices >= 0 ? indices : this.length + indices]
@@ -178,9 +178,9 @@ export default class Series{
      * @param {*} start 
      * @param {*} stop
      */
-    slice(start, stop){
+    slice(start, stop) {
         const index = this.index.slice(start, stop)
-        return new Series(index._values.map(idx => this.loc(idx)), {index:index, name:this.name})
+        return new Series(index._values.map(idx => this.loc(idx)), { index: index, name: this.name })
     }
 
     /**
@@ -191,14 +191,14 @@ export default class Series{
      * @param {number} [end=undefined] the index (0-based) of the end of the slice, excluded 
      * @returns {Series}
      */
-    islice(start, stop){
-        if(start > this.length || (this.length + start) < 0){
+    islice(start, stop) {
+        if (start > this.length || (this.length + start) < 0) {
             throw new Error('Out of bounds error')
         }
-        if(stop && (stop > this.length || (this.length + stop) < 0)){
+        if (stop && (stop > this.length || (this.length + stop) < 0)) {
             throw new Error('Out of bounds error')
         }
-        return new Series(this._values.slice(start, stop), {name:this.name, index:this.index.islice(start, stop)})
+        return new Series(this._values.slice(start, stop), { name: this.name, index: this.index.islice(start, stop) })
     }
 
     /**
@@ -207,7 +207,7 @@ export default class Series{
      * @param {number} count the number of rows
      * @returns {Series}
      */
-    head(count = 3){
+    head(count = 3) {
         return this.slice(0, count)
     }
 
@@ -217,7 +217,7 @@ export default class Series{
      * @param {number} count the number of rows
      * @returns {Series}
      */
-    tail(count = 3){
+    tail(count = 3) {
         return this.slice(-count)
     }
 
@@ -226,18 +226,18 @@ export default class Series{
      * 
      * @returns {Series}
      */
-    copy(){
-        return new Series(this._values, {name:this.name, index:this.index})
+    copy() {
+        return new Series(this._values, { name: this.name, index: this.index })
     }
-    
+
     /**
      * Returns a new series with the values reversed relative to the index
      * e.g. first > last
      * 
      * @returns {Series} 
      */
-    reverse(){
-        return new Series([...this._values].reverse(), {name:this.name, index:this.index.reverse()})
+    reverse() {
+        return new Series([...this._values].reverse(), { name: this.name, index: this.index.reverse() })
     }
 
     /**
@@ -247,8 +247,8 @@ export default class Series{
      * @param {function} func function to compute over each value
      * @returns {Series}
      */
-    map(func){
-        return new Series(this._values.map(func), {name:this.name, index:this.index})
+    map(func) {
+        return new Series(this._values.map(func), { name: this.name, index: this.index })
     }
 
     /**
@@ -256,7 +256,7 @@ export default class Series{
      * 
      * @returns {Series}
      */
-    isNaN(){
+    isNaN() {
         return this.map((value) => utils.isNaN(value))
     }
 
@@ -265,16 +265,16 @@ export default class Series{
      * 
      * @returns {Series}
      */
-    isNA(){
+    isNA() {
         return this.map((value) => utils.isNA(value))
     }
-    
+
     /**
      * Computes the boolean inverse of the series
      * true -> false and false -> true
      * @returns {Series}
      */
-    not(){
+    not() {
         return this.map((value) => !value)
     }
 
@@ -283,7 +283,7 @@ export default class Series{
      * 
      * @returns {boolean}
      */
-    all(){
+    all() {
         return stats.all(this._values)
     }
 
@@ -292,7 +292,7 @@ export default class Series{
      * 
      * @returns {boolean}
      */
-    any(){
+    any() {
         return stats.any(this._values)
     }
 
@@ -301,7 +301,7 @@ export default class Series{
      * 
      * @returns {Series}
      */
-    abs(){
+    abs() {
         return this.map(value => utils.isNaN(value) ? NaN : Math.abs(value))
     }
 
@@ -311,25 +311,25 @@ export default class Series{
      * 
      * @returns {Series}
      */
-    neg(){
+    neg() {
         return this.map(value => utils.isNaN(value) ? NaN : -value)
     }
-    
+
     /**
      * Reduces the series to a single value
      * @param {*} func 
      * @param {*} initvalue 
      */
-    reduce(func, initvalue){
+    reduce(func, initvalue) {
         return this._values.reduce(func, initvalue)
     }
-    
+
     /**
      * Computes the sum of the numeric values in the series
      *
      * @returns {number|NaN}
      */
-    sum(){
+    sum() {
         return stats.sum(this._values)
     }
 
@@ -341,7 +341,7 @@ export default class Series{
      * @param {boolean} [skipnan=true] whether to count only numeric values
      * @returns {number}
      */
-    count(options){        
+    count(options) {
         return stats.count(this._values, options)
     }
 
@@ -350,7 +350,7 @@ export default class Series{
      * 
      * @returns {number|NaN}
      */
-    mean(){
+    mean() {
         return stats.mean(this._values)
     }
 
@@ -359,8 +359,8 @@ export default class Series{
      * 
      *  @param {int} ddof 
      */
-    var(ddof = 1){
-        return stats.variance(this._values, {ddof:ddof})
+    var(ddof = 1) {
+        return stats.variance(this._values, { ddof: ddof })
     }
 
     /**
@@ -368,7 +368,7 @@ export default class Series{
      * 
      * @param {int} ddof 
      */
-    std(ddof = 1){
+    std(ddof = 1) {
         return stats.std(this._values, { ddof })
     }
 
@@ -376,15 +376,15 @@ export default class Series{
      * Returns the correlation of this and other 
      * If other is a Series, aligns the indices first
      */
-    covar(other, options){
-        if(other instanceof Series){
-            if(!options || !options["ignore axis"]){
+    covar(other, options) {
+        if (other instanceof Series) {
+            if (!options || !options["ignore axis"]) {
                 const index = this.index.intersection(other.index)
-                if(index.length == 0) return NaN
+                if (index.length == 0) return NaN
                 return stats.covar(this.reindex(index)._values, other.reindex(index)._values)
             }
         }
-        if(other.length != this.length){
+        if (other.length != this.length) {
             throw new Error("Length mismatch")
         }
         return stats.covar(this._values, [...other])
@@ -394,15 +394,15 @@ export default class Series{
      * Returns the correlation of this and other 
      * If other is a Series, aligns the indices first
      */
-    corr(other, options){
-        if(other instanceof Series){
-            if(!options || !options["ignore axis"]){
+    corr(other, options) {
+        if (other instanceof Series) {
+            if (!options || !options["ignore axis"]) {
                 const index = this.index.intersection(other.index)
-                if(index.length == 0) return NaN
+                if (index.length == 0) return NaN
                 return stats.corr(this.reindex(index)._values, other.reindex(index)._values)
             }
         }
-        if(other.length != this.length){
+        if (other.length != this.length) {
             throw new Error("Length mismatch")
         }
         return stats.corr(this._values, [...other])
@@ -412,36 +412,46 @@ export default class Series{
     /**
      * Returns the maximum drawdown 
      */
-    mdd(){
-        return stats.mdd(this._values)
+    mdd() {
+        const mdd = stats.mdd(this._values)
+
+        return {
+            ...mdd,
+            idxpeak: mdd.peak,
+            peak: this.index.at(mdd.peak),
+            idxtrough: mdd.trough,
+            trough: this.index.at(mdd.trough),
+            idxrecovery: mdd.recovery,
+            recovery: mdd.recovery ? this.index.at(mdd.recovery) : mdd.recovery
+        }
     }
 
     /**
      * Returns the compounded annual growth rate between the first and the last value
      * Index is assumed to be dates as timestamps
      */
-    cagr(){
-        return Math.pow(this.last()/this.first(), 365.25 * 1000 * 3600 * 24 / (this.index.at(-1) - this.index.at(0))) - 1
+    cagr() {
+        return Math.pow(this.last() / this.first(), 365.25 * 1000 * 3600 * 24 / (this.index.at(-1) - this.index.at(0))) - 1
     }
 
     /**
      * Computes the numeric maximum
      */
-    max(){
+    max() {
         return stats.max(this._values)
     }
 
     /**
      * Computes the numeric minimum
      */
-    min(){
+    min() {
         return stats.min(this._values)
     }
 
     /**
      * Returns the index (0-based) of the max
      */
-    idxmax(){
+    idxmax() {
         const idx = stats.idxmax(this._values)
         return utils.isNaN(idx) ? NaN : this.index.at(idx)
     }
@@ -449,7 +459,7 @@ export default class Series{
     /**
      * Returns the index (0-based) of the minimum
      */
-    idxmin(){
+    idxmin() {
         const idx = stats.idxmin(this._values)
         return utils.isNaN(idx) ? NaN : this.index.at(idx)
     }
@@ -457,14 +467,14 @@ export default class Series{
     /**
      * Returns the first numeric (or non-missing) value
      */
-    first(options){
+    first(options) {
         return stats.first(this._values, options)
     }
 
     /**
      * Returns the index of the first numeric (or non-missing value)
      */
-    idxfirst(options){
+    idxfirst(options) {
         const idx = stats.idxfirst(this._values, options)
         return utils.isNaN(idx) ? NaN : this.index.at(idx)
     }
@@ -472,14 +482,14 @@ export default class Series{
     /**
      * Returns the first numeric (or non-missing) value
      */
-    last(options){
+    last(options) {
         return stats.last(this._values, options)
     }
-    
+
     /**
      * Returns the index of the last numeric (or non-missing) value
      */
-    idxlast(options){
+    idxlast(options) {
         const idx = stats.idxlast(this._values, options)
         return utils.isNaN(idx) ? NaN : this.index.at(idx)
     }
@@ -492,17 +502,17 @@ export default class Series{
      * @param {*} options 
      * @returns {Series}
      */
-    filter(callback, options){
+    filter(callback, options) {
         const mask = this._values.map((value, i) => callback(value, i))
-        return new Series(this._values.filter((v, i) => mask[i]), 
-            {name:this.name, index:this.index.filter((v, i) => mask[i])})
+        return new Series(this._values.filter((v, i) => mask[i]),
+            { name: this.name, index: this.index.filter((v, i) => mask[i]) })
     }
 
     /**
      * Return a new series where missing values have been dropped
      * 
      */
-    dropna(){
+    dropna() {
         return this.filter((value, i) => !utils.isNA(value))
     }
 
@@ -510,7 +520,7 @@ export default class Series{
      * Return a new series where non-numeric values have been dropped
      * 
      */
-    dropnan(){
+    dropnan() {
         return this.filter((value, i) => !utils.isNaN(value))
     }
 
@@ -520,7 +530,7 @@ export default class Series{
      * @param {number} period 
      * @returns {Series}
      */
-    every(period = 1){
+    every(period = 1) {
         return this.filter((v, i) => i % period == 0)
     }
 
@@ -531,48 +541,48 @@ export default class Series{
      * @param {*} [initialvalue=NaN] value to use as the first argument to the first call of the callback
      * @returns {Series}
      */
-    accumulate(reducer, initialvalue = NaN){
+    accumulate(reducer, initialvalue = NaN) {
         const values = this._values.reduce((acc, curr, idx) => {
-            if(idx == 0) return arguments.length == 2 ? [reducer(initialvalue, curr)] : [reducer(NaN, curr)]
-            acc.push(reducer(acc[idx-1], curr))
+            if (idx == 0) return arguments.length == 2 ? [reducer(initialvalue, curr)] : [reducer(NaN, curr)]
+            acc.push(reducer(acc[idx - 1], curr))
             return acc
         }, [])
-        return new Series(values, {name:this.name, index:this.index})
+        return new Series(values, { name: this.name, index: this.index })
     }
 
     /**
      * Returns the cumulative sum
      */
-    cumsum(){
-        return new Series(stats.cumsum(this._values), {index:this.index, name:this.name})
+    cumsum() {
+        return new Series(stats.cumsum(this._values), { index: this.index, name: this.name })
     }
-    
+
     /**
      * Returns the cumulative product
      */
-    cumprod(){
-        return new Series(stats.cumprod(this._values), {index:this.index, name:this.name})
+    cumprod() {
+        return new Series(stats.cumprod(this._values), { index: this.index, name: this.name })
     }
 
     /**
      * Returns the cumulative compound
      */
-    cumcompound(initialvalue = 0){
+    cumcompound(initialvalue = 0) {
         return this.accumulate((prev, curr) => utils.isNaN(curr) ? prev : utils.isNaN(prev) ? curr : (1 + prev) * (1 + curr) - 1, initialvalue)
     }
 
     /**
      * Returns the cumulative maximum
      */
-    cummax(){
-        return new Series(stats.cummax(this._values), {index:this.index, name:this.name})
+    cummax() {
+        return new Series(stats.cummax(this._values), { index: this.index, name: this.name })
     }
 
     /**
      * Returns the cumulative minimum
      */
-    cummin(){
-        return new Series(stats.cummin(this._values), {index:this.index, name:this.name})
+    cummin() {
+        return new Series(stats.cummin(this._values), { index: this.index, name: this.name })
     }
 
     /**
@@ -583,25 +593,25 @@ export default class Series{
      * @param {*} options
      * @returns {Series}
      */
-    combine(other, callback, options){
-        if(Array.isArray(other)){
-            if(other.length !== this.length){
+    combine(other, callback, options) {
+        if (Array.isArray(other)) {
+            if (other.length !== this.length) {
                 throw new Error('Series must be of equal length')
             }
             return this.map((value, i) => callback(value, other[i], i))
         }
-        else if(other instanceof Series){
-            if(options && options["ignore index"]){
-                if(other.length !== this.length){
+        else if (other instanceof Series) {
+            if (options && options["ignore index"]) {
+                if (other.length !== this.length) {
                     throw new Error('Series must be of equal length')
                 }
                 return this.map((value, i) => callback(value, other.iloc(i), i))
             }
-            const index  = this.index.union(other.index)
+            const index = this.index.union(other.index)
             const values = index.values.map(idx => {
                 return this.index.has(idx) && other.index.has(idx) ? callback(this.loc(idx), other.loc(idx)) : NaN
             })
-            return new Series(values, {index:index, name:this.name})
+            return new Series(values, { index: index, name: this.name })
         }
         return this.map((value, i) => callback(value, other, i))
     }
@@ -619,7 +629,7 @@ export default class Series{
      * @param {*} options 
      * @returns {Series}
      */
-    add(other, options){
+    add(other, options) {
         return this.combine(other, (a, b) => (utils.isNaN(a) || utils.isNaN(b)) ? NaN : a + b, options)
     }
 
@@ -637,7 +647,7 @@ export default class Series{
      * @param {*} options 
      * @returns {Series}
      */
-    subtract(other, options){
+    subtract(other, options) {
         return this.combine(other, (a, b) => (utils.isNaN(a) || utils.isNaN(b)) ? NaN : a - b, options)
     }
 
@@ -655,7 +665,7 @@ export default class Series{
      * @param {*} options 
      * @returns {Series}
      */
-    multiply(other, options){
+    multiply(other, options) {
         return this.combine(other, (a, b) => (utils.isNaN(a) || utils.isNaN(b)) ? NaN : a * b, options)
     }
 
@@ -673,7 +683,7 @@ export default class Series{
      * @param {*} options 
      * @returns {Series}
      */
-    divide(other, options){
+    divide(other, options) {
         return this.combine(other, (a, b) => (utils.isNaN(a) || utils.isNaN(b) || b == 0) ? NaN : a / b, options)
     }
 
@@ -691,7 +701,7 @@ export default class Series{
      * @param {*} options 
      * @returns {Series}
      */
-    mod(other, options){
+    mod(other, options) {
         return this.combine(other, (a, b) => (utils.isNaN(a) || utils.isNaN(b) || b == 0) ? NaN : a % b, options)
     }
 
@@ -709,7 +719,7 @@ export default class Series{
      * @param {*} options 
      * @returns {Series}
      */
-    pow(other, options){
+    pow(other, options) {
         return this.combine(other, (a, b) => (utils.isNaN(a) || utils.isNaN(b)) ? NaN : Math.pow(a, b), options)
     }
 
@@ -727,7 +737,7 @@ export default class Series{
      * @param {*} options 
      * @returns {Series}
      */
-    equals(other, options){
+    equals(other, options) {
         return this.combine(other, (a, b) => (options && options.strict) ? a === b : a == b, options)
     }
 
@@ -745,7 +755,7 @@ export default class Series{
      * @param {*} options 
      * @returns {Series}
      */
-    ne(other, options){
+    ne(other, options) {
         return this.combine(other, (a, b) => (options && options.strict) ? a !== b : a != b, options)
     }
 
@@ -763,7 +773,7 @@ export default class Series{
      * @param {*} options 
      * @returns {Series}
      */
-    gt(other, options){
+    gt(other, options) {
         return this.combine(other, (a, b) => (utils.isNaN(a) || utils.isNaN(b)) ? NaN : a > b, options)
     }
 
@@ -781,7 +791,7 @@ export default class Series{
      * @param {*} options 
      * @returns {Series}
      */
-    gte(other, options){
+    gte(other, options) {
         return this.combine(other, (a, b) => (utils.isNaN(a) || utils.isNaN(b)) ? NaN : a >= b, options)
     }
 
@@ -799,7 +809,7 @@ export default class Series{
      * @param {*} options 
      * @returns {Series}
      */
-    lt(other, options){
+    lt(other, options) {
         return this.combine(other, (a, b) => (utils.isNaN(a) || utils.isNaN(b)) ? NaN : a < b, options)
     }
 
@@ -817,7 +827,7 @@ export default class Series{
      * @param {*} options 
      * @returns {Series}
      */
-    lte(other, options){
+    lte(other, options) {
         return this.combine(other, (a, b) => (utils.isNaN(a) || utils.isNaN(b)) ? NaN : a <= b, options)
     }
 
@@ -835,7 +845,7 @@ export default class Series{
      * @param {*} options 
      * @returns {Series}
      */
-    and(other, options){
+    and(other, options) {
         return this.combine(other, (a, b) => (a == true && b == true) ? true : false, options)
     }
 
@@ -853,7 +863,7 @@ export default class Series{
      * @param {*} options 
      * @returns {Series}
      */
-    or(other, options){
+    or(other, options) {
         return this.combine(other, (a, b) => (a == true || b == true) ? true : false, options)
     }
 
@@ -864,8 +874,8 @@ export default class Series{
      * @param {*} options options to pass to this.combine
      * @returns {Series}
      */
-    mask(other, options){
-        if(!(other instanceof Series)){
+    mask(other, options) {
+        if (!(other instanceof Series)) {
             other = this.combine(other, (a, b) => b == true, options)
         }
         return this.filter((value, i) => other.loc(this.index.at(i)), options)
@@ -879,7 +889,7 @@ export default class Series{
      * @param {*} options if other is a Series and options["ignore index"], replacement is by position
      * @returns {Series}
      */
-    where(callback, other, options){
+    where(callback, other, options) {
         return this.combine(other, (a, b, i) => callback(a, i) ? a : b, options)
     }
 
@@ -889,14 +899,14 @@ export default class Series{
      * @param {number} periods 
      * @returns {Series}
      */
-    diff(offset = 1){
-        if(utils.isNaN(offset) || !Number.isInteger(offset)){
+    diff(offset = 1) {
+        if (utils.isNaN(offset) || !Number.isInteger(offset)) {
             throw new Error('Offset should be an integer')
         }
-        if(offset >= 0){ 
-            return this.map((value, i) => i >= offset ? (utils.isNaN(value) || utils.isNaN(this._values[i-offset]) ? NaN : value - this._values[i-offset]) : NaN)
+        if (offset >= 0) {
+            return this.map((value, i) => i >= offset ? (utils.isNaN(value) || utils.isNaN(this._values[i - offset]) ? NaN : value - this._values[i - offset]) : NaN)
         }
-        return this.map((value, i) => (i - offset) < this.length ? (utils.isNaN(value) || utils.isNaN(this._values[i-offset])) ? NaN : value - this._values[i-offset] : NaN)
+        return this.map((value, i) => (i - offset) < this.length ? (utils.isNaN(value) || utils.isNaN(this._values[i - offset])) ? NaN : value - this._values[i - offset] : NaN)
     }
 
     /**
@@ -905,14 +915,14 @@ export default class Series{
      * @param {number} periods 
      * @returns {Series}
      */
-    returns(offset = 1){
-        if(utils.isNaN(offset) || !Number.isInteger(offset)){
+    returns(offset = 1) {
+        if (utils.isNaN(offset) || !Number.isInteger(offset)) {
             throw new Error('Offset should be an integer')
         }
-        if(offset >= 0){ 
-            return this.map((value, i) => i >= offset ? (utils.isNaN(value) || utils.isNaN(this._values[i-offset]) ? NaN : value / this._values[i-offset] - 1) : NaN)
+        if (offset >= 0) {
+            return this.map((value, i) => i >= offset ? (utils.isNaN(value) || utils.isNaN(this._values[i - offset]) ? NaN : value / this._values[i - offset] - 1) : NaN)
         }
-        return this.map((value, i) => (i - offset) < this.length ? (utils.isNaN(value) || utils.isNaN(this._values[i-offset])) ? NaN : value / this._values[i-offset] - 1 : NaN)
+        return this.map((value, i) => (i - offset) < this.length ? (utils.isNaN(value) || utils.isNaN(this._values[i - offset])) ? NaN : value / this._values[i - offset] - 1 : NaN)
     }
 
     /**
@@ -921,14 +931,14 @@ export default class Series{
      * @param {number} [offset=0] the number of periods to shift
      * @returns {Series}
      */
-    shift(offset = 0){
-        if(utils.isNaN(offset) || !Number.isInteger(offset)){
+    shift(offset = 0) {
+        if (utils.isNaN(offset) || !Number.isInteger(offset)) {
             throw new Error('Offset should be an integer')
         }
-        if(offset >= 0){
-            return this.map((v, i) => i >= offset ? this._values[i-offset] : NaN)
+        if (offset >= 0) {
+            return this.map((v, i) => i >= offset ? this._values[i - offset] : NaN)
         }
-        return this.map((v, i) => i - offset < this.length ? this._values[i-offset] : NaN)
+        return this.map((v, i) => i - offset < this.length ? this._values[i - offset] : NaN)
     }
 
     /**
@@ -937,14 +947,14 @@ export default class Series{
      * @param {options} options how to fill non-numeric values
      * @returns {Series}
      */
-    fillnan(options){
-        if(options && options.method == "ffill"){
+    fillnan(options) {
+        if (options && options.method == "ffill") {
             return this.accumulate((prev, curr) => utils.isNaN(curr) ? prev : curr)
         }
-        else if(options && options.method == "bfill"){
-            return this.reverse().fillnan({method:"ffill"}).reverse()
+        else if (options && options.method == "bfill") {
+            return this.reverse().fillnan({ method: "ffill" }).reverse()
         }
-        else if(options && "value" in options){
+        else if (options && "value" in options) {
             return this.accumulate((prev, curr) => utils.isNaN(curr) ? options.value : curr)
         }
         throw new Error('fillna must be provided with a method or a value')
@@ -956,14 +966,14 @@ export default class Series{
      * @param {options} options how to fill missing values
      * @returns {Series}
      */
-    fillna(options){
-        if(options && options.method == "ffill"){
+    fillna(options) {
+        if (options && options.method == "ffill") {
             return this.accumulate((prev, curr) => utils.isNA(curr) ? prev : curr)
         }
-        else if(options && options.method == "bfill"){
-            return this.reverse().fillna({method:"ffill"}).reverse()
+        else if (options && options.method == "bfill") {
+            return this.reverse().fillna({ method: "ffill" }).reverse()
         }
-        else if(options && "value" in options){
+        else if (options && "value" in options) {
             return this.accumulate((prev, curr) => utils.isNA(curr) ? options.value : curr)
         }
         throw new Error('fillna must be provided with a method or a value')
@@ -976,8 +986,8 @@ export default class Series{
      * @param {*} label 
      * @param {*} options 
      */
-    asof(label){
-        if(this.length == 0){
+    asof(label) {
+        if (this.length == 0) {
             throw new Error("series is empty")
         }
         return this._values[this.index.loc(this.index.asof(label))]
@@ -989,20 +999,20 @@ export default class Series{
      * @param {string} dtype 
      * @returns {Series}
      */
-    astype(dtype){
-        if(dtype == "string"){
+    astype(dtype) {
+        if (dtype == "string") {
             return this.map((value) => String(value))
-        } 
-        else if(dtype == "number"){
+        }
+        else if (dtype == "number") {
             return this.map((value) => Number(value))
         }
-        else if(dtype == "boolean"){
+        else if (dtype == "boolean") {
             return this.map((value) => Boolean(value))
         }
-        else if(dtype == "object"){
+        else if (dtype == "object") {
             return this.map(value => value)
         }
-        else{
+        else {
             throw new Error("Invalid dtype, " + dtype + " given")
         }
     }
@@ -1012,29 +1022,29 @@ export default class Series{
      * 
      * @param {*} options
      */
-    sort(options){
+    sort(options) {
         let [index, values] = [null, null]
 
-        if(options === undefined || options.by === undefined || options.by == "values"){
-            [ index, values ] = this.items.sort((a, b) => {
-                return utils.defaultsort(a[1], b[1], {na:(options ? options.na : "last")})
+        if (options === undefined || options.by === undefined || options.by == "values") {
+            [index, values] = this.items.sort((a, b) => {
+                return utils.defaultsort(a[1], b[1], { na: (options ? options.na : "last") })
             }).reduce((acc, curr) => {
                 acc[0].push(curr[0])
                 acc[1].push(curr[1])
                 return acc
-            },[[],[]])
+            }, [[], []])
         }
-        else if(options.by == "index"){
-            index  = this.index.sort()
-            values = index._values.map(idx => this.loc(idx))  
+        else if (options.by == "index") {
+            index = this.index.sort()
+            values = index._values.map(idx => this.loc(idx))
         }
 
-        if(options && options.ascending === false){
-            index  = index.reverse()
+        if (options && options.ascending === false) {
+            index = index.reverse()
             values = values.reverse()
         }
 
-        return new Series(values, {index:index, name:this.name})
+        return new Series(values, { index: index, name: this.name })
     }
 
     /**
@@ -1042,8 +1052,8 @@ export default class Series{
      * 
      * @param {*} options 
      */
-    rank(options){
-        return new Series(stats.rank(this._values, options), {index: this.index, name:this.name})
+    rank(options) {
+        return new Series(stats.rank(this._values, options), { index: this.index, name: this.name })
     }
 
     /**
@@ -1051,14 +1061,14 @@ export default class Series{
      * 
      * @param {float} p 
      */
-    quantile(q){
+    quantile(q) {
         return stats.quantile(this._values, q)
     }
 
     /**
      * Returns the median of the values
      */
-    median(){
+    median() {
         return this.quantile(0.5)
     }
 
@@ -1067,17 +1077,19 @@ export default class Series{
      * @param {*} options 
      * @returns SeriesGroupby
      */
-    groupby(by, options){
-        if(typeof by == "function"){
-            return new SeriesGroupby(this, {...options, grouper:by})
+    groupby(by, options) {
+        if (typeof by == "function") {
+            return new SeriesGroupby(this, { ...options, grouper: by })
         }
-        if(utils.isIterable(by)){
-            if(by.length != this.length){
+        if (utils.isIterable(by)) {
+            if (by.length != this.length) {
                 throw new Error("length of groups should match series length")
             }
-            return new SeriesGroupby(this, {...options, grouper:(groups => {
-                return (value, i) => groups[i]
-            })([...by])})
+            return new SeriesGroupby(this, {
+                ...options, grouper: (groups => {
+                    return (value, i) => groups[i]
+                })([...by])
+            })
         }
         throw new Error("Series.groupby called incorrectly")
     }
@@ -1090,7 +1102,7 @@ export default class Series{
      * @param {} axis 
      * @returns {Series}
      */
-    drop(labels){
+    drop(labels) {
         return this.filter((value, i) => {
             return labels.indexOf(this.index.iloc(i)) == -1
         })
@@ -1101,7 +1113,7 @@ export default class Series{
      * 
      * @param {*} values 
      */
-    isin(values){
+    isin(values) {
         return this.map((value, i) => {
             return values.indexOf(value) != -1
         })
@@ -1112,7 +1124,7 @@ export default class Series{
      * 
      * @param {number} [n=0] the number of significant digits 
      */
-    toFixed(n = 0){
+    toFixed(n = 0) {
         return this.astype("number").map((value, i) => {
             return value.toFixed(n)
         })
@@ -1123,37 +1135,37 @@ export default class Series{
      * 
      * @param {*} index 
      */
-    reindex(index, options){
+    reindex(index, options) {
         const values = [...index].map((idx, i, index) => {
-            if(this.index.has(idx)){
+            if (this.index.has(idx)) {
                 return this.loc(idx)
             }
-            if(options && options.fillna == "ffill"){
+            if (options && options.fillna == "ffill") {
                 //get the most recent value which is strictly after the previous index
-                try{
-                    if(i == 0 || this.index.asof(idx) > index[i-1]){
+                try {
+                    if (i == 0 || this.index.asof(idx) > index[i - 1]) {
                         return this.asof(idx)
                     }
                 }
-                catch{
+                catch {
                     return NaN
                 }
                 return NaN
             }
             return options && options.fillna || NaN
         })
-        return new Series(values, {index:index, name:this.name})
+        return new Series(values, { index: index, name: this.name })
     }
 
     /**
      * Resample to a given frequency
      */
-    resample(frequency, options){
+    resample(frequency, options) {
         const groups = this.index._values.map(date => {
-            switch(frequency){
+            switch (frequency) {
                 case "D":
                     return datetime(date).endOf("day").valueOf()
-                case "W": 
+                case "W":
                     return datetime(date).endOf("week").startOf("day").valueOf()
                 case "M":
                     return datetime(date).endOf("month").startOf("day").valueOf()
@@ -1171,18 +1183,18 @@ export default class Series{
      * 
      * @param {*} options 
      */
-    pivot(options){
+    pivot(options) {
         //function that accepts (value, i) and return {index, column}
         const grouper = (options => {
             const callbacks = ["index", "columns"].map(axis => {
-                if(options && options[axis]){
+                if (options && options[axis]) {
                     //if the options is already a function
-                    if(typeof options[axis] == "function"){
+                    if (typeof options[axis] == "function") {
                         return options[axis]
                     }
                     //if it is an iterable, convert to function
-                    if(utils.isIterable(options[axis])){
-                        if(options[axis].length != this.length){
+                    if (utils.isIterable(options[axis])) {
+                        if (options[axis].length != this.length) {
                             throw new Error(`pivot ${axis} length should equal series length`)
                         }
                         return (groups => (v, i) => groups[i])([...options[axis]])
@@ -1191,18 +1203,18 @@ export default class Series{
                 throw new Error(`${axis} missing from pivot options`)
             })
             return (value, i) => {
-                return {index:callbacks[0](value, i), column:callbacks[1](value, i)}
+                return { index: callbacks[0](value, i), column: callbacks[1](value, i) }
             }
         })(options)
 
-        return new Pivot(this, {grouper})
+        return new Pivot(this, { grouper })
     }
 
     /**
      * Apply a rolling function to the series
      * @param {*} options 
      */
-    rolling(options){
+    rolling(options) {
         return new Rolling(this, options)
     }
 }
