@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: stats/idxmin.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: stats/idxmin.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import * as utils from '../utils'
+
+/**
+ * Returns the index of the smallest numeric value
+ * in the given list of values
+ * 
+ * @param {*} values 
+ */
+export default function(values){
+    return values.reduce((acc, curr, i) => {
+        if(utils.isNaN(curr)){
+            return acc
+        }
+        if(utils.isNaN(acc)){
+            return i
+        }
+        return values[i] &lt; values[acc] ? i : acc
+    }, NaN)
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="module.html#.exports">exports</a></li></ul><h3>Global</h3><ul><li><a href="global.html#abs">abs</a></li><li><a href="global.html#accumulate">accumulate</a></li><li><a href="global.html#add">add</a></li><li><a href="global.html#all">all</a></li><li><a href="global.html#and">and</a></li><li><a href="global.html#any">any</a></li><li><a href="global.html#asof">asof</a></li><li><a href="global.html#astype">astype</a></li><li><a href="global.html#at">at</a></li><li><a href="global.html#cagr">cagr</a></li><li><a href="global.html#categorical">categorical</a></li><li><a href="global.html#columns">columns</a></li><li><a href="global.html#combine">combine</a></li><li><a href="global.html#concat">concat</a></li><li><a href="global.html#copy">copy</a></li><li><a href="global.html#corr">corr</a></li><li><a href="global.html#count">count</a></li><li><a href="global.html#covar">covar</a></li><li><a href="global.html#cumcompound">cumcompound</a></li><li><a href="global.html#cummax">cummax</a></li><li><a href="global.html#cummin">cummin</a></li><li><a href="global.html#cumprod">cumprod</a></li><li><a href="global.html#cumsum">cumsum</a></li><li><a href="global.html#day">day</a></li><li><a href="global.html#dayofyear">dayofyear</a></li><li><a href="global.html#defaultsort">defaultsort</a></li><li><a href="global.html#diff">diff</a></li><li><a href="global.html#difference">difference</a></li><li><a href="global.html#divide">divide</a></li><li><a href="global.html#drop">drop</a></li><li><a href="global.html#dropna">dropna</a></li><li><a href="global.html#dropnan">dropnan</a></li><li><a href="global.html#empty">empty</a></li><li><a href="global.html#equals">equals</a></li><li><a href="global.html#every">every</a></li><li><a href="global.html#fillna">fillna</a></li><li><a href="global.html#fillnan">fillnan</a></li><li><a href="global.html#filter">filter</a></li><li><a href="global.html#first">first</a></li><li><a href="global.html#groupby">groupby</a></li><li><a href="global.html#gt">gt</a></li><li><a href="global.html#gte">gte</a></li><li><a href="global.html#has">has</a></li><li><a href="global.html#head">head</a></li><li><a href="global.html#iat">iat</a></li><li><a href="global.html#idxfirst">idxfirst</a></li><li><a href="global.html#idxlast">idxlast</a></li><li><a href="global.html#idxmax">idxmax</a></li><li><a href="global.html#idxmin">idxmin</a></li><li><a href="global.html#iloc">iloc</a></li><li><a href="global.html#index">index</a></li><li><a href="global.html#indexOf">indexOf</a></li><li><a href="global.html#intersection">intersection</a></li><li><a href="global.html#isBoolean">isBoolean</a></li><li><a href="global.html#isDate">isDate</a></li><li><a href="global.html#isDefined">isDefined</a></li><li><a href="global.html#isin">isin</a></li><li><a href="global.html#isIterable">isIterable</a></li><li><a href="global.html#islice">islice</a></li><li><a href="global.html#isListOfList">isListOfList</a></li><li><a href="global.html#isListOfRecords">isListOfRecords</a></li><li><a href="global.html#ismappable">ismappable</a></li><li><a href="global.html#isMatrix">isMatrix</a></li><li><a href="global.html#isNA">isNA</a></li><li><a href="global.html#isna">isna</a></li><li><a href="global.html#isNaN">isNaN</a></li><li><a href="global.html#isnan">isnan</a></li><li><a href="global.html#isNumber">isNumber</a></li><li><a href="global.html#isNumeric">isNumeric</a></li><li><a href="global.html#isPrimitive">isPrimitive</a></li><li><a href="global.html#isSortable">isSortable</a></li><li><a href="global.html#isString">isString</a></li><li><a href="global.html#items">items</a></li><li><a href="global.html#iterrows">iterrows</a></li><li><a href="global.html#keymap">keymap</a></li><li><a href="global.html#last">last</a></li><li><a href="global.html#length">length</a></li><li><a href="global.html#loc">loc</a></li><li><a href="global.html#lt">lt</a></li><li><a href="global.html#lte">lte</a></li><li><a href="global.html#map">map</a></li><li><a href="global.html#mask">mask</a></li><li><a href="global.html#max">max</a></li><li><a href="global.html#mdd">mdd</a></li><li><a href="global.html#mean">mean</a></li><li><a href="global.html#median">median</a></li><li><a href="global.html#min">min</a></li><li><a href="global.html#mod">mod</a></li><li><a href="global.html#month">month</a></li><li><a href="global.html#multiply">multiply</a></li><li><a href="global.html#name">name</a></li><li><a href="global.html#ne">ne</a></li><li><a href="global.html#neg">neg</a></li><li><a href="global.html#not">not</a></li><li><a href="global.html#numeric">numeric</a></li><li><a href="global.html#options">options</a></li><li><a href="global.html#or">or</a></li><li><a href="global.html#pivot">pivot</a></li><li><a href="global.html#pow">pow</a></li><li><a href="global.html#quantile">quantile</a></li><li><a href="global.html#quarter">quarter</a></li><li><a href="global.html#range">range</a></li><li><a href="global.html#rank">rank</a></li><li><a href="global.html#reduce">reduce</a></li><li><a href="global.html#reindex">reindex</a></li><li><a href="global.html#rename">rename</a></li><li><a href="global.html#resample">resample</a></li><li><a href="global.html#returns">returns</a></li><li><a href="global.html#reverse">reverse</a></li><li><a href="global.html#rolling">rolling</a></li><li><a href="global.html#shape">shape</a></li><li><a href="global.html#shift">shift</a></li><li><a href="global.html#slice">slice</a></li><li><a href="global.html#sort">sort</a></li><li><a href="global.html#sortable">sortable</a></li><li><a href="global.html#sorted">sorted</a></li><li><a href="global.html#std">std</a></li><li><a href="global.html#subtract">subtract</a></li><li><a href="global.html#sum">sum</a></li><li><a href="global.html#tail">tail</a></li><li><a href="global.html#toFixed">toFixed</a></li><li><a href="global.html#transpose">transpose</a></li><li><a href="global.html#union">union</a></li><li><a href="global.html#unique">unique</a></li><li><a href="global.html#values">values</a></li><li><a href="global.html#var">var</a></li><li><a href="global.html#weekday">weekday</a></li><li><a href="global.html#weeknum">weeknum</a></li><li><a href="global.html#where">where</a></li><li><a href="global.html#year">year</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.6</a> on Wed Apr 21 2021 17:44:31 GMT+0100 (British Summer Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
