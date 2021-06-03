@@ -1,10 +1,24 @@
+/**
+ * @module Index
+ */
+
 import datetime   from '../libs/datetime'
 import bisect     from '../libs/bisect' 
 import * as utils from '../utils'
 import stats      from '../stats'
 import Series     from './Series'
 
+/**
+ * Index base class
+ */
 export default class Index{ 
+    /**
+     * Creates a new index object from values
+     * 
+     * @param {iterable} values 
+     * @param {object} [options] 
+     * @returns 
+     */
     constructor(values, options){
         if(values instanceof Index){
             this._values  = values._values
@@ -30,6 +44,7 @@ export default class Index{
 
     /**
      * Returns the values of the index as a native array
+     * @property {Array} values the index values
      */
     get values(){
         return [...this._values]
@@ -37,6 +52,7 @@ export default class Index{
 
     /**
      * Returns a Map mapping keys to their positions
+     * @property {Map} keymap
      */
     get keymap(){
         if(!this._options.keymap){
@@ -47,6 +63,7 @@ export default class Index{
 
     /**
      * Returns the name of the index (or undefined)
+     * @property {string} name
      */
     get name(){
         return this._options.name
@@ -54,6 +71,7 @@ export default class Index{
 
     /**
      * Returns true if the index is natively sortable
+     * @property {boolean} sortable
      */
     get sortable(){
         return this.numeric || this.categorical
@@ -61,6 +79,7 @@ export default class Index{
 
     /**
      * Returns one of false, 'ascending' or 'descending'
+     * @property {string|boolean} sorted 
      */
     get sorted(){
         if(this._options.sorted === undefined){
@@ -91,6 +110,7 @@ export default class Index{
 
     /**
      * Returns the size of the index
+     * @property {number} length
      */
     get length(){
         return this._values.length
@@ -98,6 +118,7 @@ export default class Index{
 
     /**
      * Returns true if the index is empty
+     * @property {boolean} empty
      */
     get empty(){
         return this.length == 0
@@ -105,6 +126,7 @@ export default class Index{
 
     /**
      * Returns the options
+     * @property {object} options
      */
     get options(){
         return {...this._options}
@@ -112,6 +134,7 @@ export default class Index{
 
     /**
      * Returns true if the index contains only unique values
+     * @property {boolean} unique
      */
     get unique(){
         return this.keymap.size == this.length
@@ -119,6 +142,7 @@ export default class Index{
 
     /**
      * Returns true if the index contains numeric values only
+     * @property {boolean} numeric
      */
     get numeric(){
         if(this.length == 0){
@@ -134,6 +158,7 @@ export default class Index{
 
     /**
      * Returns true if the index contains string values only
+     * @property {boolean} categorical
      */
     get categorical(){
         if(this.length == 0){
@@ -166,6 +191,8 @@ export default class Index{
 
     /**
      * Returns a new axis
+     * @property {function} copy
+     * @returns Index
      */
     copy(){
         return new Index(this._values, this.options)
