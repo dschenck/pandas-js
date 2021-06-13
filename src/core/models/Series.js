@@ -955,6 +955,9 @@ export default class Series {
             return this.reverse().fillnan({ method: "ffill" }).reverse()
         }
         else if (options && "value" in options) {
+            if (Array.isArray(options.value) || options.value instanceof Series) {
+                return this.combine(other, (self, other) => utils.isNaN(self) ? other : self, options)
+            }
             return this.accumulate((prev, curr) => utils.isNaN(curr) ? options.value : curr)
         }
         throw new Error('fillna must be provided with a method or a value')
@@ -974,6 +977,9 @@ export default class Series {
             return this.reverse().fillna({ method: "ffill" }).reverse()
         }
         else if (options && "value" in options) {
+            if (Array.isArray(options.value) || options.value instanceof Series) {
+                return this.combine(other, (self, other) => utils.isNA(self) ? other : self, options)
+            }
             return this.accumulate((prev, curr) => utils.isNA(curr) ? options.value : curr)
         }
         throw new Error('fillna must be provided with a method or a value')
@@ -1140,7 +1146,7 @@ export default class Series {
             if (this.index.has(idx)) {
                 return this.loc(idx)
             }
-            if (options && options.fillna == "ffill") {
+            if (options && (options.fillna == "ffill" || options.method == "ffill")) {
                 //get the most recent value which is strictly after the previous index
                 try {
                     if (i == 0 || this.index.asof(idx) > index[i - 1]) {

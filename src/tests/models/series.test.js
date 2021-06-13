@@ -1,11 +1,11 @@
 import * as utils from '../../core/utils'
-import Series     from '../../core/models/Series'
-import Index      from '../../core/models/Index'
+import Series from '../../core/models/Series'
+import Index from '../../core/models/Index'
 
-let s1 = new Series([0,1,2,3,4,5,6,7], {name:'integers', index:["A","B","C","D","E","F","G","H"]})
+let s1 = new Series([0, 1, 2, 3, 4, 5, 6, 7], { name: 'integers', index: ["A", "B", "C", "D", "E", "F", "G", "H"] })
 
 describe('Creating a new series', () => {
-    test('without any data', ()=> {
+    test('without any data', () => {
         let s = new Series()
         expect(s).toBeInstanceOf(Series)
         expect(s.length).toBe(0)
@@ -14,34 +14,34 @@ describe('Creating a new series', () => {
         expect(s.name).toBe(undefined)
     })
     test('with data but no index', () => {
-        let s = new Series(["A","B","C"])
+        let s = new Series(["A", "B", "C"])
         expect(s).toBeInstanceOf(Series)
         expect(s.length).toBe(3)
         expect(s.name).toBe(undefined)
         expect(s.index).toBeInstanceOf(Index)
-        expect(s.index.values).toEqual([0,1,2])
+        expect(s.index.values).toEqual([0, 1, 2])
     })
     test('with a name', () => {
-        let s = new Series(["A","B","C"], {name:"test"})
+        let s = new Series(["A", "B", "C"], { name: "test" })
         expect(s.name).toBe('test')
     })
     test('wrong-formed data', () => {
         expect(() => new Series("-")).toThrow(TypeError)
-        expect(() => new Series([1,2,3], {index:[1,2,3,4]})).toThrow(Error)
+        expect(() => new Series([1, 2, 3], { index: [1, 2, 3, 4] })).toThrow(Error)
     })
 })
 
 describe('Changing the index in-place', () => {
     test('altering the index', () => {
-        let s = new Series([1,2,3])
-            s.index = [9,8,7]
-        expect(s.index.values).toEqual([9,8,7])
+        let s = new Series([1, 2, 3])
+        s.index = [9, 8, 7]
+        expect(s.index.values).toEqual([9, 8, 7])
     })
 })
 
 describe('Indexing by value', () => {
     test('requesting a single label', () => {
-        let s = new Series([0,1,2,3,4,5,6], {index:["A",9,true,false,null,undefined,NaN]})
+        let s = new Series([0, 1, 2, 3, 4, 5, 6], { index: ["A", 9, true, false, null, undefined, NaN] })
         expect(s.loc("A")).toBe(0)
         expect(s.loc(9)).toBe(1)
         expect(s.loc(true)).toBe(2)
@@ -51,18 +51,18 @@ describe('Indexing by value', () => {
         expect(s.loc(NaN)).toBe(6)
     })
     test('requesting several labels at once', () => {
-        let s = new Series([0,1,2,3,4,5,6], {index:["A",9,true,false,null,undefined,NaN]})
-        expect(s.loc(["A",9,true,false]).values).toEqual([0,1,2,3])
+        let s = new Series([0, 1, 2, 3, 4, 5, 6], { index: ["A", 9, true, false, null, undefined, NaN] })
+        expect(s.loc(["A", 9, true, false]).values).toEqual([0, 1, 2, 3])
     })
     test('requesting a non-existent key', () => {
-        let s = new Series([0,1,2,3])
+        let s = new Series([0, 1, 2, 3])
         expect(() => s.loc("missing")).toThrow(Error)
     })
 })
 
 describe('Indexing by position', () => {
     test('requesting a single label', () => {
-        let s = new Series([0,1,2,3,4,5,6], {index:["A",9,true,false,null,undefined,NaN]})
+        let s = new Series([0, 1, 2, 3, 4, 5, 6], { index: ["A", 9, true, false, null, undefined, NaN] })
         expect(s.iloc(0)).toBe(0)
         expect(s.iloc(1)).toBe(1)
         expect(s.iloc(2)).toBe(2)
@@ -72,7 +72,7 @@ describe('Indexing by position', () => {
         expect(s.iloc(-1)).toBe(6)
     })
     test('indexing out of bounds', () => {
-        let s = new Series([0,1,2,3])
+        let s = new Series([0, 1, 2, 3])
         expect(() => s.iloc(5)).toThrow(Error)
         expect(() => s.iloc(-5)).toThrow(Error)
     })
@@ -80,15 +80,15 @@ describe('Indexing by position', () => {
 
 describe('Slicing', () => {
     test('simple slicing', () => {
-        let s = new Series([0,1,2,3,4,5,6,7])
-        expect(s.islice(0,1).values).toEqual([0])
+        let s = new Series([0, 1, 2, 3, 4, 5, 6, 7])
+        expect(s.islice(0, 1).values).toEqual([0])
         expect(s.islice(-1,).values).toEqual([7])
-        expect(s.islice(0,-4).values).toEqual([0,1,2,3])
-        expect(s.islice(-4,-1).values).toEqual([4,5,6])
+        expect(s.islice(0, -4).values).toEqual([0, 1, 2, 3])
+        expect(s.islice(-4, -1).values).toEqual([4, 5, 6])
         expect(s.islice(0, s.length).length).toBe(s.length)
     })
     test('out of bounds error', () => {
-        let s = new Series([0,1,2,3,4,5,6,7])
+        let s = new Series([0, 1, 2, 3, 4, 5, 6, 7])
         expect(() => s.islice(9)).toThrow(Error)
         expect(() => s.islice(-9)).toThrow(Error)
     })
@@ -96,12 +96,12 @@ describe('Slicing', () => {
 
 describe('Typing', () => {
     test('as string', () => {
-        let s = new Series([0,1,2])
+        let s = new Series([0, 1, 2])
         expect(s.astype('string').values).toEqual(["0", "1", "2"])
     })
     test('as numbers', () => {
-        let s = new Series([0, 3/4, true, false, "A", null, undefined, NaN])
-        expect(s.astype('number').values).toEqual([0, 3/4, 1, 0, NaN, 0, NaN, NaN])
+        let s = new Series([0, 3 / 4, true, false, "A", null, undefined, NaN])
+        expect(s.astype('number').values).toEqual([0, 3 / 4, 1, 0, NaN, 0, NaN, NaN])
     })
     test('as boolean', () => {
         let s = new Series(["A", 0, 1, true, false, NaN, undefined, null])
@@ -115,26 +115,26 @@ describe("first and last", () => {
     let s = new Series([NaN, "A", 1, 0, 10, 20, "B", undefined])
 
     test("first", () => {
-        expect(s.first({skipnan:true})).toBe(1)
-        expect(s.first({skipnan:false})).toBe("A")
+        expect(s.first({ skipnan: true })).toBe(1)
+        expect(s.first({ skipnan: false })).toBe("A")
         expect(s.first()).toBe("A")
     })
 
     test("last", () => {
-        expect(s.last({skipnan:true})).toBe(20)
-        expect(s.last({skipnan:false})).toBe("B")
+        expect(s.last({ skipnan: true })).toBe(20)
+        expect(s.last({ skipnan: false })).toBe("B")
         expect(s.last()).toBe("B")
     })
 
     test("first index", () => {
-        expect(s.idxfirst({skipnan:true})).toBe(2)
-        expect(s.idxfirst({skipnan:false})).toBe(1)
+        expect(s.idxfirst({ skipnan: true })).toBe(2)
+        expect(s.idxfirst({ skipnan: false })).toBe(1)
         expect(s.idxfirst()).toBe(1)
     })
 
     test("last index", () => {
-        expect(s.idxlast({skipnan:true})).toBe(5)
-        expect(s.idxlast({skipnan:false})).toBe(6)
+        expect(s.idxlast({ skipnan: true })).toBe(5)
+        expect(s.idxlast({ skipnan: false })).toBe(6)
         expect(s.idxlast()).toBe(6)
     })
 })
@@ -151,13 +151,13 @@ describe('missing values', () => {
     })
     test('filling missing values', () => {
         let s = new Series(["A", 0, 1, true, false, NaN, undefined, null])
-        expect(s.fillna({method:"ffill"}).values).toEqual([
+        expect(s.fillna({ method: "ffill" }).values).toEqual([
             "A", 0, 1, true, false, false, false, false
         ])
-        expect(s.fillna({method:"bfill"}).values).toEqual([
-            "A", 0, 1, true, false, NaN,NaN,NaN
+        expect(s.fillna({ method: "bfill" }).values).toEqual([
+            "A", 0, 1, true, false, NaN, NaN, NaN
         ])
-        expect(s.fillna({value:"X"}).values).toEqual([
+        expect(s.fillna({ value: "X" }).values).toEqual([
             "A", 0, 1, true, false, "X", "X", "X"
         ])
     })
@@ -181,28 +181,28 @@ describe('boolean series', () => {
 
 describe('masking', () => {
     test('with boolean array', () => {
-        let s = new Series([0,1,2,3,4])
-        expect(s.mask([true,true,false,false,true]).length).toBe(3)
+        let s = new Series([0, 1, 2, 3, 4])
+        expect(s.mask([true, true, false, false, true]).length).toBe(3)
     })
 })
 
 describe('descriptive statistics', () => {
     test('sum, count and mean', () => {
-        let s1 = new Series([0,1,2,3,4])
+        let s1 = new Series([0, 1, 2, 3, 4])
         expect(s1.sum()).toBe(10)
         expect(s1.count()).toBe(5)
         expect(s1.mean()).toBe(2)
 
-        let s2 = new Series([0,1,2,3,NaN,"A"])
+        let s2 = new Series([0, 1, 2, 3, NaN, "A"])
         expect(s2.sum()).toBe(6)
-        expect(s2.count({skipnan:true})).toBe(4)
-        expect(s2.count({skipnan:false})).toBe(5)
+        expect(s2.count({ skipnan: true })).toBe(4)
+        expect(s2.count({ skipnan: false })).toBe(5)
         expect(s2.count()).toBe(5)
 
         let s3 = new Series(["A", 1, 2.5, true, false, NaN, undefined, Infinity, -Infinity, null])
         expect(s3.sum()).toBe(4.5)
-        expect(s3.count({skipnan:true})).toBe(4)
-        expect(s3.count({skipnan:false})).toBe(5)
+        expect(s3.count({ skipnan: true })).toBe(4)
+        expect(s3.count({ skipnan: false })).toBe(5)
         expect(s3.count()).toBe(5)
         expect(s3.mean()).toBe(1.125)
     })
@@ -214,7 +214,7 @@ describe('descriptive statistics', () => {
     })
 
     test("variance and standard deviation", () => {
-        let srs = new Series([1,2,3,4,5,6,7,8,9,10])
+        let srs = new Series([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
 
         expect(srs.var(0)).toEqual(8.25)
         expect(srs.var(1)).toBeCloseTo(9.17, 2)
@@ -227,126 +227,126 @@ describe('descriptive statistics', () => {
 
 describe('cumulative operations', () => {
     test('cumulative sum', () => {
-        let s1 = new Series([1,2,3,4,5])
-        expect(s1.cumsum().values).toEqual([1,3,6,10,15])
+        let s1 = new Series([1, 2, 3, 4, 5])
+        expect(s1.cumsum().values).toEqual([1, 3, 6, 10, 15])
 
-        let s2 = new Series([NaN,1,2,3,NaN,5])
-        expect(s2.cumsum().values).toEqual([NaN,1,3,6,6,11])
+        let s2 = new Series([NaN, 1, 2, 3, NaN, 5])
+        expect(s2.cumsum().values).toEqual([NaN, 1, 3, 6, 6, 11])
 
-        let s3 = new Series([1,2,3,NaN,4])
+        let s3 = new Series([1, 2, 3, NaN, 4])
         expect(s3.cumsum().values).toEqual([1, 3, 6, 6, 10])
     })
     test('cumulative product', () => {
-        let s1 = new Series([1,2,3,4,5])
-        expect(s1.cumprod().values).toEqual([1,2,6,24,120])
+        let s1 = new Series([1, 2, 3, 4, 5])
+        expect(s1.cumprod().values).toEqual([1, 2, 6, 24, 120])
 
-        let s2 = new Series([NaN,1,2,3,NaN,5])
-        expect(s2.cumprod().values).toEqual([NaN,1,2,6,6,30])
+        let s2 = new Series([NaN, 1, 2, 3, NaN, 5])
+        expect(s2.cumprod().values).toEqual([NaN, 1, 2, 6, 6, 30])
 
-        let s3 = new Series([1,2,3,NaN,4])
-        expect(s3.cumprod().values).toEqual([1,2,6,6,24])
+        let s3 = new Series([1, 2, 3, NaN, 4])
+        expect(s3.cumprod().values).toEqual([1, 2, 6, 6, 24])
     })
     test('cumulative minimum', () => {
-        let s1 = new Series([0,-1,2,-3,5])
-        expect(s1.cummin().values).toEqual([0,-1,-1,-3,-3])
+        let s1 = new Series([0, -1, 2, -3, 5])
+        expect(s1.cummin().values).toEqual([0, -1, -1, -3, -3])
 
-        let s2 = new Series([NaN,0,-1,2,-3,5])
-        expect(s2.cummin().values).toEqual([NaN,0,-1,-1,-3,-3])
+        let s2 = new Series([NaN, 0, -1, 2, -3, 5])
+        expect(s2.cummin().values).toEqual([NaN, 0, -1, -1, -3, -3])
         expect(s2.cummin().values).toEqual([NaN, 0, -1, -1, -3, -3])
 
-        let s3 = new Series([0,-1,2,-3,NaN,5])
-        expect(s3.cummin().values).toEqual([0,-1,-1,-3,-3,-3])
+        let s3 = new Series([0, -1, 2, -3, NaN, 5])
+        expect(s3.cummin().values).toEqual([0, -1, -1, -3, -3, -3])
     })
     test('cumulative maximum', () => {
-        let s1 = new Series([0,-1,2,-3,5])
-        expect(s1.cummax().values).toEqual([0,0,2,2,5])
+        let s1 = new Series([0, -1, 2, -3, 5])
+        expect(s1.cummax().values).toEqual([0, 0, 2, 2, 5])
 
-        let s2 = new Series([NaN,0,-1,2,-3,5])
-        expect(s2.cummax().values).toEqual([NaN,0,0,2,2,5])
+        let s2 = new Series([NaN, 0, -1, 2, -3, 5])
+        expect(s2.cummax().values).toEqual([NaN, 0, 0, 2, 2, 5])
     })
 })
 
 describe("arithmetics", () => {
     test('addition', () => {
-        let s1 = new Series([NaN, 1, 2, 3, true, false], {index:["A","B","C","D","E","F"]})
+        let s1 = new Series([NaN, 1, 2, 3, true, false], { index: ["A", "B", "C", "D", "E", "F"] })
         expect(s1.add(1).values).toEqual([NaN, 2, 3, 4, 2, 1])
         expect(s1.add(NaN).values).toEqual([NaN, NaN, NaN, NaN, NaN, NaN])
 
-        let s2 = new Series([1,2,3, NaN], {index:["F","E","B","C"]})
-        expect(s1.add(s2).values).toEqual([NaN,4,NaN,NaN,3,1])
+        let s2 = new Series([1, 2, 3, NaN], { index: ["F", "E", "B", "C"] })
+        expect(s1.add(s2).values).toEqual([NaN, 4, NaN, NaN, 3, 1])
 
-        let s3 = [1,1,1,1,1,1]
-        expect(s1.add(s3).values).toEqual([NaN,2,3,4,2,1])
+        let s3 = [1, 1, 1, 1, 1, 1]
+        expect(s1.add(s3).values).toEqual([NaN, 2, 3, 4, 2, 1])
 
-        let s5 = s1.map((value, i) => 5-i)
-        expect(s1.add(s5, {"ignore index":true}).values).toEqual([NaN, 5, 5, 5, 2, 0])
+        let s5 = s1.map((value, i) => 5 - i)
+        expect(s1.add(s5, { "ignore index": true }).values).toEqual([NaN, 5, 5, 5, 2, 0])
     })
     test('subtractions', () => {
-        let s1 = new Series([NaN, 1, 2, 3, true, false], {index:["A","B","C","D","E","F"]})
+        let s1 = new Series([NaN, 1, 2, 3, true, false], { index: ["A", "B", "C", "D", "E", "F"] })
         expect(s1.subtract(1).values).toEqual([NaN, 0, 1, 2, 0, -1])
         expect(s1.subtract(NaN).values).toEqual([NaN, NaN, NaN, NaN, NaN, NaN])
 
-        let s2 = new Series([1,2,3, NaN], {index:["F","E","B","C"]})
-        expect(s1.subtract(s2).values).toEqual([NaN,-2,NaN,NaN,-1,-1])
+        let s2 = new Series([1, 2, 3, NaN], { index: ["F", "E", "B", "C"] })
+        expect(s1.subtract(s2).values).toEqual([NaN, -2, NaN, NaN, -1, -1])
 
-        let s3 = [1,1,1,1,1,1]
+        let s3 = [1, 1, 1, 1, 1, 1]
         expect(s1.subtract(s3).values).toEqual([NaN, 0, 1, 2, 0, -1])
 
-        let s5 = s1.map((value, i) => 5-i)
-        expect(s1.subtract(s5, {"ignore index":true}).values).toEqual([NaN, -3, -1, 1, 0, 0])
+        let s5 = s1.map((value, i) => 5 - i)
+        expect(s1.subtract(s5, { "ignore index": true }).values).toEqual([NaN, -3, -1, 1, 0, 0])
     })
     test('multiplications', () => {
-        let s1 = new Series([NaN, 1, 2, 3, true, false], {index:["A","B","C","D","E","F"]})
-        expect(s1.multiply(-1).values).toEqual([NaN, -1,-2,-3,-1,-0])
+        let s1 = new Series([NaN, 1, 2, 3, true, false], { index: ["A", "B", "C", "D", "E", "F"] })
+        expect(s1.multiply(-1).values).toEqual([NaN, -1, -2, -3, -1, -0])
         expect(s1.multiply(NaN).values).toEqual([NaN, NaN, NaN, NaN, NaN, NaN])
 
-        let s2 = new Series([1,2,3, NaN], {index:["F","E","B","C"]})
-        expect(s1.multiply(s2).values).toEqual([NaN,3,NaN,NaN,2,0])
+        let s2 = new Series([1, 2, 3, NaN], { index: ["F", "E", "B", "C"] })
+        expect(s1.multiply(s2).values).toEqual([NaN, 3, NaN, NaN, 2, 0])
 
-        let s3 = [1,-1,1,-1,1,-1]
-        expect(s1.multiply(s3).values).toEqual([NaN, -1,2,-3,1,-0])
+        let s3 = [1, -1, 1, -1, 1, -1]
+        expect(s1.multiply(s3).values).toEqual([NaN, -1, 2, -3, 1, -0])
 
     })
     test('divisions', () => {
-        let s1 = new Series([NaN, 1, 2, 3, true, false], {index:["A","B","C","D","E","F"]})
-        expect(s1.divide(2).values).toEqual([NaN,0.5,1,1.5,0.5,0])
+        let s1 = new Series([NaN, 1, 2, 3, true, false], { index: ["A", "B", "C", "D", "E", "F"] })
+        expect(s1.divide(2).values).toEqual([NaN, 0.5, 1, 1.5, 0.5, 0])
         expect(s1.divide(NaN).values).toEqual([NaN, NaN, NaN, NaN, NaN, NaN])
 
-        let s2 = new Series([1,2,-2, NaN], {index:["F","E","B","C"]})
-        expect(s1.divide(s2).values).toEqual([NaN,-0.5,NaN,NaN,0.5,0])
+        let s2 = new Series([1, 2, -2, NaN], { index: ["F", "E", "B", "C"] })
+        expect(s1.divide(s2).values).toEqual([NaN, -0.5, NaN, NaN, 0.5, 0])
 
-        let s3 = [1,-1,1,-1,1,-1]
-        expect(s1.divide(s3).values).toEqual([NaN, -1,2,-3,1,-0])
+        let s3 = [1, -1, 1, -1, 1, -1]
+        expect(s1.divide(s3).values).toEqual([NaN, -1, 2, -3, 1, -0])
     })
 })
 
 describe("Mapping and filtering", () => {
     test('Filtering', () => {
-        let s1 = new Series([0,1,2,3,4,5,6,7], {name:'integers', index:["A","B","C","D","E","F","G","H"]})
+        let s1 = new Series([0, 1, 2, 3, 4, 5, 6, 7], { name: 'integers', index: ["A", "B", "C", "D", "E", "F", "G", "H"] })
         expect(s1.filter(value => value % 2 == 0).values).toEqual(
-            [0,2,4,6]
+            [0, 2, 4, 6]
         )
     })
     test('Mapping', () => {
-        let s1 = new Series([0,1,2,3,4,5,6,7], {name:'integers', index:["A","B","C","D","E","F","G","H"]})
+        let s1 = new Series([0, 1, 2, 3, 4, 5, 6, 7], { name: 'integers', index: ["A", "B", "C", "D", "E", "F", "G", "H"] })
         expect(s1.map(value => value % 2 == 0).values).toEqual(
-            [true,false,true,false,true,false,true,false]
+            [true, false, true, false, true, false, true, false]
         )
     })
     test('Every n steps', () => {
-        let s1 = new Series([0,1,2,3,4,5,6,7], {name:'integers', index:["A","B","C","D","E","F","G","H"]})
+        let s1 = new Series([0, 1, 2, 3, 4, 5, 6, 7], { name: 'integers', index: ["A", "B", "C", "D", "E", "F", "G", "H"] })
         expect(s1.every(2).values).toEqual(
-            [0,2,4,6]
+            [0, 2, 4, 6]
         )
-        expect(s1.every(2).index.values).toEqual(["A","C","E","G"])
+        expect(s1.every(2).index.values).toEqual(["A", "C", "E", "G"])
     })
 })
 
 describe('Reversing', () => {
-    let s1 = new Series([0,1,2,3,4,5,6,7], {index:["A","B","C","D","E","F","G","H"]})
+    let s1 = new Series([0, 1, 2, 3, 4, 5, 6, 7], { index: ["A", "B", "C", "D", "E", "F", "G", "H"] })
     test('simple reversing', () => {
         expect(s1.reverse().values).toEqual(
-            [7,6,5,4,3,2,1,0]
+            [7, 6, 5, 4, 3, 2, 1, 0]
         )
         expect(s1.reverse().loc("A")).toBe(s1.loc("A"))
     })
@@ -360,69 +360,69 @@ describe('Reversing', () => {
 
 describe('Updating', () => {
     test('conditional witho other series', () => {
-        let s1 = new Series([0,1,2,3,4,5,6,7])
-        let s2 = new Series([7,6,5,4,3,2,1,0])
+        let s1 = new Series([0, 1, 2, 3, 4, 5, 6, 7])
+        let s2 = new Series([7, 6, 5, 4, 3, 2, 1, 0])
 
         expect(s1.where((value => value % 2 == 0), s2).values).toEqual(
-            [0,6,2,4,4,2,6,0]
+            [0, 6, 2, 4, 4, 2, 6, 0]
         )
     })
     test('conditional with array', () => {
-        let s1 = new Series([0,1,2,3,4,5,6,7])
-        let s2 = [-1,-1,-1,-1,-1,-1,-1,-1]
+        let s1 = new Series([0, 1, 2, 3, 4, 5, 6, 7])
+        let s2 = [-1, -1, -1, -1, -1, -1, -1, -1]
 
         expect(s1.where((value => value % 2 == 0), s2).values).toEqual(
-            [0,-1,2,-1,4,-1,6,-1]
+            [0, -1, 2, -1, 4, -1, 6, -1]
         )
     })
     test('conditional with scalar', () => {
-        let s1 = new Series([0,1,2,3,4,5,6,7])
+        let s1 = new Series([0, 1, 2, 3, 4, 5, 6, 7])
 
         expect(s1.where((value => value % 2 == 0), NaN).values).toEqual(
-            [0,NaN,2,NaN,4,NaN,6,NaN]
+            [0, NaN, 2, NaN, 4, NaN, 6, NaN]
         )
     })
 })
 
 describe("difference", () => {
-    let srs = new Series([0,1,2,3,4,5,6,7,8,9,10])
+    let srs = new Series([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
 
     test('default diff', () => {
         expect(srs.diff().values).toEqual(
-            [NaN,1,1,1,1,1,1,1,1,1,1]
+            [NaN, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
         )
     })
     test('0 difference', () => {
         expect(srs.diff(0).values).toEqual(
-            [0,0,0,0,0,0,0,0,0,0,0]
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         )
     })
     test('2-step diff', () => {
         expect(srs.diff(2).values).toEqual(
-            [NaN,NaN,2,2,2,2,2,2,2,2,2]
+            [NaN, NaN, 2, 2, 2, 2, 2, 2, 2, 2, 2]
         )
     })
 })
 
-describe("Shifting", () =>{
-    let s1 = new Series([0,1,2,3,4,5,6,7], {index:["A","B","C","D","E","F","G","H"]})
+describe("Shifting", () => {
+    let s1 = new Series([0, 1, 2, 3, 4, 5, 6, 7], { index: ["A", "B", "C", "D", "E", "F", "G", "H"] })
     test("positive offset", () => {
         expect(s1.shift(1).values).toEqual(
-            [NaN,0,1,2,3,4,5,6]
+            [NaN, 0, 1, 2, 3, 4, 5, 6]
         )
-        expect(s1.shift(1).index.values).toEqual(["A","B","C","D","E","F","G","H"])
+        expect(s1.shift(1).index.values).toEqual(["A", "B", "C", "D", "E", "F", "G", "H"])
     })
     test("negative offset", () => {
         expect(s1.shift(-1).values).toEqual(
-            [1,2,3,4,5,6,7,NaN]
+            [1, 2, 3, 4, 5, 6, 7, NaN]
         )
-        expect(s1.shift(-1).index.values).toEqual(["A","B","C","D","E","F","G","H"])
+        expect(s1.shift(-1).index.values).toEqual(["A", "B", "C", "D", "E", "F", "G", "H"])
     })
     test("0 offset", () => {
         expect(s1.shift(0).values).toEqual(
             s1.values
         )
-        expect(s1.shift(0).index.values).toEqual(["A","B","C","D","E","F","G","H"])
+        expect(s1.shift(0).index.values).toEqual(["A", "B", "C", "D", "E", "F", "G", "H"])
     })
     test("wrong argument should throw error", () => {
         expect(() => s1.shift('hi')).toThrow(Error)
@@ -430,21 +430,21 @@ describe("Shifting", () =>{
 })
 
 describe("Dropping a list of labels", () => {
-    let s1 = new Series([0,1,2,3,4,5,6,7], {index:["A","B","C","D","E","F","G","H"]})
+    let s1 = new Series([0, 1, 2, 3, 4, 5, 6, 7], { index: ["A", "B", "C", "D", "E", "F", "G", "H"] })
     test("a single label", () => {
         expect(s1.drop(["A"]).values).toEqual(
-            [1,2,3,4,5,6,7]
+            [1, 2, 3, 4, 5, 6, 7]
         )
     })
     test("a few label", () => {
         expect(s1.drop(["A", "B", "F"]).values).toEqual(
-            [2,3,4,6,7]
+            [2, 3, 4, 6, 7]
         )
     })
 })
 
 describe("Location of min and max", () => {
-    let s = new Series([null, 0.25, 3/4, true, false, "A", null, undefined, NaN])
+    let s = new Series([null, 0.25, 3 / 4, true, false, "A", null, undefined, NaN])
     test("argument of min", () => {
         expect(s.idxmin()).toBe(4)
     })
@@ -454,58 +454,58 @@ describe("Location of min and max", () => {
 })
 
 describe("Is in", () => {
-    let s = new Series([null, 0.25, 3/4, true, false, "A", null, undefined, NaN])
+    let s = new Series([null, 0.25, 3 / 4, true, false, "A", null, undefined, NaN])
     test("value is in", () => {
-        expect(s.isin([true,false]).values).toEqual(
-            [false,false,false,true,true,false,false,false,false]
+        expect(s.isin([true, false]).values).toEqual(
+            [false, false, false, true, true, false, false, false, false]
         )
     })
 })
 
 describe("sorting", () => {
-    let s1 =  new Series([1,5,7,3], {index:[1,4,3,2]})
+    let s1 = new Series([1, 5, 7, 3], { index: [1, 4, 3, 2] })
 
     test("sorting by index", () => {
-        expect(s1.sort({by:"index"}).values).toEqual([1,3,7,5])
-        expect(s1.sort({by:"index"}).index.values).toEqual([1,2,3,4])
+        expect(s1.sort({ by: "index" }).values).toEqual([1, 3, 7, 5])
+        expect(s1.sort({ by: "index" }).index.values).toEqual([1, 2, 3, 4])
     })
 
     test("sorting by value", () => {
-        expect(s1.sort({by:"values"}).values).toEqual([1,3,5,7])
-        expect(s1.sort({by:"values"}).index.values).toEqual([1,2,4,3])
+        expect(s1.sort({ by: "values" }).values).toEqual([1, 3, 5, 7])
+        expect(s1.sort({ by: "values" }).index.values).toEqual([1, 2, 4, 3])
     })
 
     test("sorting in reverse", () => {
-        expect(s1.sort({by:"index", ascending:false}).values).toEqual([5,7,3,1])
-        expect(s1.sort({by:"index", ascending:false}).index.values).toEqual([4,3,2,1])
+        expect(s1.sort({ by: "index", ascending: false }).values).toEqual([5, 7, 3, 1])
+        expect(s1.sort({ by: "index", ascending: false }).index.values).toEqual([4, 3, 2, 1])
     })
 
-    let s2 = new Series([1,2,2,NaN,NaN,NaN,4,5,6], {index:[2,4,6,8,10,12,14,16,18]})
+    let s2 = new Series([1, 2, 2, NaN, NaN, NaN, 4, 5, 6], { index: [2, 4, 6, 8, 10, 12, 14, 16, 18] })
 
     test("multiple NaN", () => {
-        expect(s2.sort().values).toEqual([1,2,2,4,5,6,NaN,NaN,NaN])
-        expect(s2.sort({by:"values"}).values).toEqual([NaN,NaN,NaN,1,2,2,4,5,6])
-        expect(s2.sort({by:"values", na:"last"}).values).toEqual([1,2,2,4,5,6,NaN,NaN,NaN])
+        expect(s2.sort().values).toEqual([1, 2, 2, 4, 5, 6, NaN, NaN, NaN])
+        expect(s2.sort({ by: "values" }).values).toEqual([NaN, NaN, NaN, 1, 2, 2, 4, 5, 6])
+        expect(s2.sort({ by: "values", na: "last" }).values).toEqual([1, 2, 2, 4, 5, 6, NaN, NaN, NaN])
     })
 })
 
 describe("ranking", () => {
-    let s1 =  new Series([1,5,7,3], {index:[1,4,3,2]})
+    let s1 = new Series([1, 5, 7, 3], { index: [1, 4, 3, 2] })
 
     test("ranking in ascending order", () => {
-        expect(s1.rank().values).toEqual([1,3,4,2])
+        expect(s1.rank().values).toEqual([1, 3, 4, 2])
     })
     test("ranking in ascending order", () => {
-        expect(s1.rank({ascending:true}).values).toEqual([1,3,4,2])
+        expect(s1.rank({ ascending: true }).values).toEqual([1, 3, 4, 2])
     })
     test("ranking in descending order", () => {
-        expect(s1.rank({ascending:false}).values).toEqual([4,2,1,3])
+        expect(s1.rank({ ascending: false }).values).toEqual([4, 2, 1, 3])
     })
     test("normalized ranking", () => {
-        expect(s1.rank({normalized:true}).values).toEqual([1/4,3/4,1,2/4])
+        expect(s1.rank({ normalized: true }).values).toEqual([1 / 4, 3 / 4, 1, 2 / 4])
     })
 
-    let s2 = new Series([1,2,2,NaN,NaN,NaN,4,5,6], {index:[2,4,6,8,10,12,14,16,18]})
+    let s2 = new Series([1, 2, 2, NaN, NaN, NaN, 4, 5, 6], { index: [2, 4, 6, 8, 10, 12, 14, 16, 18] })
 
     test("multiple NaN", () => {
         expect(s2.rank()).toBeInstanceOf(Series)
@@ -514,18 +514,18 @@ describe("ranking", () => {
 })
 
 describe("iteration protocol", () => {
-    let s = new Series([1,2,3,4,5])
+    let s = new Series([1, 2, 3, 4, 5])
 
     test("is iterable", () => {
         expect(utils.isIterable(s)).toBe(true)
     })
     test("spread operator", () => {
-        expect([...s]).toEqual([1,2,3,4,5])
+        expect([...s]).toEqual([1, 2, 3, 4, 5])
     })
 })
 
 describe("quantile", () => {
-    let s = new Series([1,2,3,4,5,6,7,8,9])
+    let s = new Series([1, 2, 3, 4, 5, 6, 7, 8, 9])
 
     test("0 quantile", () => {
         expect(s.quantile(0)).toEqual(1)
@@ -539,11 +539,11 @@ describe("quantile", () => {
 })
 
 describe("asof", () => {
-    const s1 = new Series([0,1,2,3,4,5,6,7,8,9], 
-        {index:[0,2,4,6,8,10,12,14,16,18]})
+    const s1 = new Series([0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+        { index: [0, 2, 4, 6, 8, 10, 12, 14, 16, 18] })
 
     test("index", () => {
-        expect(s1.index.values).toEqual([0,2,4,6,8,10,12,14,16,18])
+        expect(s1.index.values).toEqual([0, 2, 4, 6, 8, 10, 12, 14, 16, 18])
     })
 
     test("basic asof", () => {
@@ -559,50 +559,62 @@ describe("asof", () => {
 })
 
 describe("reindex", () => {
-    let s = new Series([1,2,3,4,5,6,7,8,9])
+    let s = new Series([1, 2, 3, 4, 5, 6, 7, 8, 9])
 
     test("reindex with other index", () => {
-        expect(s.reindex(new Index([4,8,12]))).toBeInstanceOf(Series)
-        expect(s.reindex(new Index([4,8,12])).length).toEqual(3)
-        expect(s.reindex(new Index([4,8,12])).values).toEqual([5,9,NaN])
+        expect(s.reindex(new Index([4, 8, 12]))).toBeInstanceOf(Series)
+        expect(s.reindex(new Index([4, 8, 12])).length).toEqual(3)
+        expect(s.reindex(new Index([4, 8, 12])).values).toEqual([5, 9, NaN])
     })
     test("reindex with array", () => {
-        expect(s.reindex([4,8,12])).toBeInstanceOf(Series)
-        expect(s.reindex([4,8,12]).length).toEqual(3)
-        expect(s.reindex([4,8,12]).values).toEqual([5,9,NaN])
+        expect(s.reindex([4, 8, 12])).toBeInstanceOf(Series)
+        expect(s.reindex([4, 8, 12]).length).toEqual(3)
+        expect(s.reindex([4, 8, 12]).values).toEqual([5, 9, NaN])
     })
 
-    const s1 = new Series([0,1,2,3,4,5,6,7,8,9], {index:[0,2,4,6,8,10,12,14,16,18]})
+    const s1 = new Series([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], { index: [0, 2, 4, 6, 8, 10, 12, 14, 16, 18] })
 
     test("reindexing and filling", () => {
         expect(s1.reindex(
-            new Index([1,3,5,5.5]), {fillna:"ffill"}
-        ).values).toEqual([0,1,2,NaN])
+            new Index([1, 3, 5, 5.5]), { fillna: "ffill" }
+        ).values).toEqual([0, 1, 2, NaN])
         expect(s1.reindex(
-            new Index([-2,3,5,5.5]), {fillna:"ffill"}
-        ).values).toEqual([NaN,1,2,NaN])
+            new Index([-2, 3, 5, 5.5]), { fillna: "ffill" }
+        ).values).toEqual([NaN, 1, 2, NaN])
     })
+
+    test("advanced filling", () => {
+        const s1 = new Series([1, 2, 3, 4], { index: [2, 6, 10, 14] })
+        const s2 = new Series([5, 6, 7, 8], { index: [1, 5, 9, 13] })
+        const s3 = new Series([10, 11, 12, 13], { index: [10, 11, 12, 13] })
+
+        expect(s1.reindex(s2.index).values).toEqual([NaN, NaN, NaN, NaN])
+        expect(s1.reindex(s2.index, { fillna: "ffill" }).values).toEqual([NaN, 1, 2, 3])
+        expect(s2.reindex(s1.index, { fillna: "ffill" }).values).toEqual([5, 6, 7, 8])
+        expect(s2.reindex(s3.index, { fillna: "ffill" }).values).toEqual([7, NaN, NaN, 8])
+    })
+
 })
 
-describe("pivot table", () =>  {
-    let s = new Series([1,2,3,4,5,6,7,8,9])
+describe("pivot table", () => {
+    let s = new Series([1, 2, 3, 4, 5, 6, 7, 8, 9])
 
     test("simple pivot table", () => {
         const df = s.pivot({
-                index:[1,1,1,1,1,2,2,2,2],
-                columns:["A","B","A","B","A","B","A","B","A"],
-            }).last()
-        expect(df.shape).toEqual([2,2])
+            index: [1, 1, 1, 1, 1, 2, 2, 2, 2],
+            columns: ["A", "B", "A", "B", "A", "B", "A", "B", "A"],
+        }).last()
+        expect(df.shape).toEqual([2, 2])
     })
 })
 
 describe("rolling", () => {
-    let s = new Series([1,2,3,4,5,6,7,8,9])
+    let s = new Series([1, 2, 3, 4, 5, 6, 7, 8, 9])
 
     test("simple rolling sum", () => {
-        const r = s.rolling({window:2}).sum()
+        const r = s.rolling({ window: 2 }).sum()
         expect(r).toBeInstanceOf(Series)
-        expect(r.values).toEqual([NaN,3,5,7,9,11,13,15,17])
+        expect(r.values).toEqual([NaN, 3, 5, 7, 9, 11, 13, 15, 17])
     })
 })
 
