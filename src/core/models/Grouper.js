@@ -1,8 +1,8 @@
-import utils from '../utils'
 import stats from '../stats'
 import Index from './Index'
 import Series from './Series'
 import DataFrame from './DataFrame'
+import * as utils from "../utils";
 
 class BaseGrouper {
     constructor(underlying, options) {
